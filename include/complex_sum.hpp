@@ -2,22 +2,12 @@
 
 #include <complex>
 
+#include "common.hpp"
+
 namespace av {
     
 namespace implementation {
 
-    #define force_inline inline __attribute__((always_inline))
-    
-#ifdef __AVX512F__
-    constexpr std::size_t SIMD_REG_SIZE = 64;
-#elif __AVX__
-    constexpr std::size_t SIMD_REG_SIZE = 32;
-#elif __SSE4_1__
-    constexpr std::size_t SIMD_REG_SIZE = 16;
-#else
-    constexpr std::size_t SIMD_REG_SIZE = 0;
-#endif
-    
     template <class T, std::size_t chunk_size>
     struct chunk_sum;
     
@@ -129,10 +119,17 @@ namespace implementation {
     };
     
 }
+
     template<class T>
     static force_inline std::complex<T> sum(std::complex<T> *arr, std::size_t count) {
         return implementation::sum<T>::compute(arr, count);
     }
+
+    template<class T>
+    static force_inline std::complex<T> sum_default(std::complex<T> *arr, std::size_t count) {
+        return implementation::sum<T, 0>::compute(arr, count);
+    }
+    
 }
 
 
