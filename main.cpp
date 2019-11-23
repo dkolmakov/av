@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <iostream>
 #include <cstdlib>
+
 #include "complex_sum.hpp"
+
 
 int main(int argc, char **argv) {
     if (argc < 2)
