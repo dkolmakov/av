@@ -79,7 +79,7 @@ namespace implementation {
         }
     };
     
-    template <class T, std::size_t chunk_size = SIMD_REG_SIZE / sizeof(T)>
+    template <class T, std::size_t chunk_size = SIMD_REG_SIZE / sizeof(T) >
     struct sum;
     
     template <class T>

@@ -1,3 +1,6 @@
+// #pragma GCC optimize("O3", "unroll-loops", "omit-frame-pointer", "inline")
+// #pragma GCC option("arch=native", "tune=native", "no-zero-upper")
+
 #include <stdio.h>
 #include <iostream>
 #include <cstdlib>
