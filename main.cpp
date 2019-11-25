@@ -37,9 +37,9 @@ int main(int argc, char **argv) {
     std::cout << "Runner " << av::inst_set << std::endl;
     
     Timer t;
-    asm volatile ("nop;nop;nop;");
+//     asm volatile ("nop;nop;nop;");
     std::complex<double> result = av::sum(arr, to_sum);
-    asm volatile ("nop;nop;nop;");
+//     asm volatile ("nop;nop;nop;");
     double elapsed = t.elapsed();
     
     std::cout << "Result " << result << " elapsed in " << elapsed << " usec" << std::endl;

@@ -25,12 +25,12 @@ namespace implementation {
     struct chunk_sum<T, 4> {
         static force_inline std::complex<T> compute(std::complex<T> *arr) {
             T real_0 = arr[0].real() + arr[1].real();
-            T imag_0 = arr[0].imag() + arr[1].imag();
             T real_1 = arr[2].real() + arr[3].real();
+            T imag_0 = arr[0].imag() + arr[1].imag();
             T imag_1 = arr[2].imag() + arr[3].imag();
             T real = real_0 + real_1;
             T imag = imag_0 + imag_1;
-            
+
             return std::complex<T>(real, imag);
         }
     };
@@ -39,16 +39,16 @@ namespace implementation {
     struct chunk_sum<T, 8> {
         static force_inline std::complex<T> compute(std::complex<T> *arr) {
             T real_0 = arr[0].real() + arr[1].real();
-            T imag_0 = arr[0].imag() + arr[1].imag();
             T real_1 = arr[2].real() + arr[3].real();
-            T imag_1 = arr[2].imag() + arr[3].imag();
             T real_2 = arr[4].real() + arr[5].real();
-            T imag_2 = arr[4].imag() + arr[5].imag();
             T real_3 = arr[6].real() + arr[7].real();
+            T imag_0 = arr[0].imag() + arr[1].imag();
+            T imag_1 = arr[2].imag() + arr[3].imag();
+            T imag_2 = arr[4].imag() + arr[5].imag();
             T imag_3 = arr[6].imag() + arr[7].imag();
             T real = real_0 + real_1 + real_2 + real_3;
             T imag = imag_0 + imag_1 + imag_2 + imag_3;
-            
+        
             return std::complex<T>(real, imag);
         }
     };
@@ -88,9 +88,11 @@ namespace implementation {
             // Default implementation
             std::complex<T> result(0,0);
             
+            asm volatile ("nop;nop;nop;");
             for (std::size_t i = 0; i < count; i++) {
                 result += arr[i];
             }
+            asm volatile ("nop;nop;nop;");
             
             return result;
         }
@@ -102,6 +104,7 @@ namespace implementation {
             // Specialized implementation
             std::complex<T> result(0,0);
             
+            asm volatile ("nop;nop;nop;");
             // Sum by chunks
             std::size_t i = 0;
             while (i + chunk_size < count) {
@@ -113,6 +116,7 @@ namespace implementation {
             for (; i < count; i++) {
                 result += arr[i];
             }
+            asm volatile ("nop;nop;nop;");
             
             return result;
         }
