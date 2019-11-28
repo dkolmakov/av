@@ -4,7 +4,7 @@
 
 #include "common.hpp"
 
-namespace av {
+namespace av_unroll {
     
 namespace implementation {
 
@@ -79,7 +79,7 @@ namespace implementation {
         }
     };
     
-    template <class T, std::size_t chunk_size = SIMD_REG_SIZE / sizeof(T) >
+    template <class T, std::size_t chunk_size = av::SIMD_REG_SIZE / sizeof(T) >
     struct sum;
     
     template <class T>
@@ -111,12 +111,12 @@ namespace implementation {
                 result += chunk_sum<T, chunk_size>::compute(arr + i);
                 i += chunk_size;
             }
+            asm volatile ("nop;nop;nop;");
             
             // Add the remainder
             for (; i < count; i++) {
                 result += arr[i];
             }
-            asm volatile ("nop;nop;nop;");
             
             return result;
         }
@@ -125,12 +125,12 @@ namespace implementation {
 }
 
     template<class T>
-    static force_inline std::complex<T> sum(std::complex<T> *arr, std::size_t count) {
+    static std::complex<T> sum(std::complex<T> *arr, std::size_t count) {
         return implementation::sum<T>::compute(arr, count);
     }
 
     template<class T>
-    static force_inline std::complex<T> sum_default(std::complex<T> *arr, std::size_t count) {
+    static std::complex<T> sum_default(std::complex<T> *arr, std::size_t count) {
         return implementation::sum<T, 0>::compute(arr, count);
     }
     

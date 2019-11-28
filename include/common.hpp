@@ -14,7 +14,7 @@ namespace av {
     const std::string inst_set = "SSE4.1";
     constexpr std::size_t SIMD_REG_SIZE = 16;
 #else
-    const std::string inst_set = "";
+    const std::string inst_set = "Default";
     constexpr std::size_t SIMD_REG_SIZE = 0;
 #endif
 

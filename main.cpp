@@ -7,7 +7,9 @@
 #include <chrono>
 
 #include "common.hpp"
-#include "complex_sum.hpp"
+#include "sum_unroll.hpp"
+#include "sum_chunked.hpp"
+#include "sum_manual.hpp"
 
 class Timer
 {
@@ -30,19 +32,23 @@ int main(int argc, char **argv) {
     std::size_t to_sum = atoi(argv[1]);
     std::complex<double> *arr = new std::complex<double>[to_sum];
     
-    for (size_t i = 0; i < to_sum; i++) {
+    for (size_t i = 0; i < to_sum; i++)
         arr[i] = i + 1;
-    }
-    
-    std::cout << "Runner " << av::inst_set << std::endl;
-    
+        
     Timer t;
-//     asm volatile ("nop;nop;nop;");
-    std::complex<double> result = av::sum(arr, to_sum);
-//     asm volatile ("nop;nop;nop;");
+    std::complex<double> result = av_unroll::sum(arr, to_sum);
     double elapsed = t.elapsed();
-    
-    std::cout << "Result " << result << " elapsed in " << elapsed << " usec" << std::endl;
+    std::cout << av::inst_set << " unrolled result " << result << " got in " << elapsed << " usec" << std::endl;
 
+    t.reset();
+    result = av_chunked::sum(arr, to_sum);
+    elapsed = t.elapsed();
+    std::cout << av::inst_set << " chunked result " << result << " got in " << elapsed << " usec" << std::endl;
+    
+    t.reset();
+    result = av_manual::sum(arr, to_sum);
+    elapsed = t.elapsed();
+    std::cout << av::inst_set << " manual result " << result << " got in " << elapsed << " usec" << std::endl;
+    
     return 0;
 }

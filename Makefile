@@ -3,6 +3,7 @@ APP=runner
 CXX = g++
 INCLUDES += -Iinclude/
 CXXFLAGS = -Wall -std=c++11 -fpermissive -O3 
+#-fopt-info-vec-all
 
 OBJDIR=./obj
 BINDIR=./bin
@@ -18,6 +19,15 @@ OBJECTS_AVX512 := $(OBJDIR)/$(SOURCES:.cpp=.oavx512)
 
 BINARIES := $(BINDIR)/$(APP)_none $(BINDIR)/$(APP)_sse $(BINDIR)/$(APP)_avx $(BINDIR)/$(APP)_avx512 
 
+SUM_UNROLL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/unroll,$(BINARIES))
+SUM_CHUNKED_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/chunked,$(BINARIES))
+SUM_MANUAL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/man,$(BINARIES))
+
+all: $(OBJDIR) $(BINDIR) $(BINARIES) asm
+
+clean:
+	@rm -rvf $(OBJDIR)/* $(LOGDIR)/* $(BINARIES)
+	
 $(BINDIR):
 	mkdir -p bin
 	
@@ -51,14 +61,16 @@ $(OBJDIR)/%.oavx: %.cpp
 $(OBJDIR)/%.oavx512: %.cpp
 	$(CXX) $(CXXFLAGS) -mavx512f $(INCLUDES) -c $< -o $@ 
 
-$(LOGDIR)/sum%.asm: $(BINDIR)/$(APP)%
+$(LOGDIR)/unroll%: $(BINDIR)/$(APP)%
 	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$2}' > $@
 
-asm: $(LOGDIR) $(LOGDIR)/sum_sse.asm $(LOGDIR)/sum_avx.asm $(LOGDIR)/sum_avx512.asm $(LOGDIR)/sum_none.asm 
+$(LOGDIR)/chunked%: $(BINDIR)/$(APP)%
+	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$4}' > $@
 	
-all: $(OBJDIR) $(BINDIR) $(BINARIES) asm
+$(LOGDIR)/man%: $(BINDIR)/$(APP)%
+	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$6}' > $@
+	
+asm: $(LOGDIR) $(SUM_UNROLL_ASM) $(SUM_CHUNKED_ASM) $(SUM_MANUAL_ASM) 
 
-clean:
-	@rm -rvf $(OBJDIR)/* $(LOGDIR)/* 
 	
 
