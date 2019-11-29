@@ -22,7 +22,19 @@ namespace implementation {
 
     template <class T>
     struct chunk_sum<T, 2> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
+        static force_inline void compute(std::complex<T> * acc, std::complex<T> * arr, std::size_t count) {
+//             double *acc_d = reinterpret_cast<double *>(acc);
+//             double *arr_d = reinterpret_cast<double *>(acc);
+//             for (std::size_t i = 0; i < count * 2; i += 4) {
+//                 acc_d[0] += arr_d[i];
+//                 acc_d[1] += arr_d[i + 1];
+//                 acc_d[2] += arr_d[i + 2];
+//                 acc_d[3] += arr_d[i + 3];
+//             }
+                        
+//             std::complex<T> *acc_a = reinterpret_cast<std::complex<T> *>(__builtin_assume_aligned(acc, 32));
+//             std::complex<T> *arr_a = reinterpret_cast<std::complex<T> *>(__builtin_assume_aligned(arr, 32));
+            
             for (std::size_t i = 0; i < count; i += 2) {
                 acc[0] += arr[i];
                 acc[1] += arr[i + 1];
@@ -81,17 +93,17 @@ namespace implementation {
     struct sum {
         static force_inline std::complex<T> compute(std::complex<T> *arr, std::size_t count) {
             // Specialized implementation
-            std::complex<T> acc[chunk_size];
+            std::complex<T> acc[chunk_size] __attribute__ ((aligned (32)));
             std::size_t i = 0;
             for (; i < chunk_size; i++)
-                acc[i] = arr[i];
-            std::size_t to_sum = count - chunk_size - count % chunk_size;
+                acc[i] = 0;
+            std::size_t to_sum = count - count % chunk_size;
             
             asm volatile ("nop;nop;nop;");
             // Sum by chunks
-            chunk_sum<T, chunk_size>::compute(acc, arr + i, to_sum);
+            chunk_sum<T, chunk_size>::compute(acc, arr, to_sum);
             asm volatile ("nop;nop;nop;");
-            i += to_sum;
+            i = to_sum;
             
             // Add the remainder
             std::complex<T> result(0,0);

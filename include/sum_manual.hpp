@@ -15,9 +15,12 @@ namespace implementation {
     template <class T>
     struct chunk_sum<T, 1> {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            for (std::size_t i = 0; i < count; i++) {
-                acc[0] += arr[i];
+            __m128d res = _mm_xor_pd(res, res);
+            for (std::size_t i = 0; i < count; i += 1) {
+                __m128d data = _mm_load_pd(reinterpret_cast<double *>(arr + i));
+                res = _mm_add_pd(res, data);
             }
+            _mm_store_pd(reinterpret_cast<double *>(acc), res);
         }
     };
 

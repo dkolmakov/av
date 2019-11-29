@@ -2,7 +2,7 @@ APP=runner
 
 CXX = g++
 INCLUDES += -Iinclude/
-CXXFLAGS = -Wall -std=c++11 -fpermissive -O3 
+CXXFLAGS = -Wall -std=c++11 -fpermissive -O3
 #-fopt-info-vec-all
 
 OBJDIR=./obj
