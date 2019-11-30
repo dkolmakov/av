@@ -10,6 +10,7 @@
 #include "sum_unroll.hpp"
 #include "sum_chunked.hpp"
 #include "sum_manual.hpp"
+#include "mul_manual.hpp"
 
 class Timer
 {
@@ -33,7 +34,7 @@ int main(int argc, char **argv) {
     std::complex<double> *arr = new std::complex<double>[to_sum];
     
     for (size_t i = 0; i < to_sum; i++)
-        arr[i] = i + 1;
+        arr[i] = 1.000001;
         
     Timer t;
     std::complex<double> result = av_unroll::sum(arr, to_sum);
@@ -49,6 +50,11 @@ int main(int argc, char **argv) {
     result = av_manual::sum(arr, to_sum);
     elapsed = t.elapsed();
     std::cout << av::inst_set << " manual result " << result << " got in " << elapsed << " usec" << std::endl;
+
+    t.reset();
+    result = av_mul_manual::mul(arr, to_sum);
+    elapsed = t.elapsed();
+    std::cout << av::inst_set << " manual multiplication result " << result << " got in " << elapsed << " usec" << std::endl;
     
     return 0;
 }

@@ -1,7 +1,7 @@
 with import <nixpkgs> {};
 
 let common = [
-    gcc8
+    gcc9
     gdb
 ]; 
 in stdenvNoCC.mkDerivation rec {

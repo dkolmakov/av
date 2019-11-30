@@ -19,9 +19,11 @@ OBJECTS_AVX512 := $(OBJDIR)/$(SOURCES:.cpp=.oavx512)
 
 BINARIES := $(BINDIR)/$(APP)_none $(BINDIR)/$(APP)_sse $(BINDIR)/$(APP)_avx $(BINDIR)/$(APP)_avx512 
 
-SUM_UNROLL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/unroll,$(BINARIES))
-SUM_CHUNKED_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/chunked,$(BINARIES))
-SUM_MANUAL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/man,$(BINARIES))
+SUM_UNROLL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/sum_unroll,$(BINARIES))
+SUM_CHUNKED_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/sum_chunked,$(BINARIES))
+SUM_MANUAL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/sum_man,$(BINARIES))
+
+MUL_MANUAL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/mul_man,$(BINARIES))
 
 all: $(OBJDIR) $(BINDIR) $(BINARIES) asm
 
@@ -61,16 +63,19 @@ $(OBJDIR)/%.oavx: %.cpp
 $(OBJDIR)/%.oavx512: %.cpp
 	$(CXX) $(CXXFLAGS) -mavx512f $(INCLUDES) -c $< -o $@ 
 
-$(LOGDIR)/unroll%: $(BINDIR)/$(APP)%
+$(LOGDIR)/sum_unroll%: $(BINDIR)/$(APP)%
 	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$2}' > $@
 
-$(LOGDIR)/chunked%: $(BINDIR)/$(APP)%
+$(LOGDIR)/sum_chunked%: $(BINDIR)/$(APP)%
 	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$4}' > $@
 	
-$(LOGDIR)/man%: $(BINDIR)/$(APP)%
+$(LOGDIR)/sum_man%: $(BINDIR)/$(APP)%
 	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$6}' > $@
 	
-asm: $(LOGDIR) $(SUM_UNROLL_ASM) $(SUM_CHUNKED_ASM) $(SUM_MANUAL_ASM) 
+$(LOGDIR)/mul_man%: $(BINDIR)/$(APP)%
+	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$8}' > $@
+
+asm: $(LOGDIR) $(SUM_UNROLL_ASM) $(SUM_CHUNKED_ASM) $(SUM_MANUAL_ASM) $(MUL_MANUAL_ASM)
 
 	
 

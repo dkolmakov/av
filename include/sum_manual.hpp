@@ -16,9 +16,11 @@ namespace implementation {
     struct chunk_sum<T, 1> {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
             __m128d res = _mm_xor_pd(res, res);
-            for (std::size_t i = 0; i < count; i += 1) {
-                __m128d data = _mm_load_pd(reinterpret_cast<double *>(arr + i));
-                res = _mm_add_pd(res, data);
+            for (std::size_t i = 0; i < count; i += 2) {
+                __m128d data0 = _mm_load_pd(reinterpret_cast<double *>(arr + i));
+                res = _mm_add_pd(res, data0);
+                __m128d data1 = _mm_load_pd(reinterpret_cast<double *>(arr + i + 1));
+                res = _mm_add_pd(res, data1);
             }
             _mm_store_pd(reinterpret_cast<double *>(acc), res);
         }
@@ -88,14 +90,14 @@ namespace implementation {
         static force_inline std::complex<T> compute(std::complex<T> *arr, std::size_t count) {
             // Specialized implementation
             std::complex<T> acc[chunk_size];
-            std::size_t i = 0;
             std::size_t to_sum = count - count % chunk_size;
             
-            asm volatile ("nop;nop;nop;");
             // Sum by chunks
-            chunk_sum<T, chunk_size>::compute(acc, arr + i, to_sum);
             asm volatile ("nop;nop;nop;");
-            i += to_sum;
+            chunk_sum<T, chunk_size>::compute(acc, arr, to_sum);
+            asm volatile ("nop;nop;nop;");
+
+            std::size_t i = to_sum;
             
             // Add the remainder
             std::complex<T> result(0,0);
