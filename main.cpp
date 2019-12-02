@@ -7,9 +7,11 @@
 #include <chrono>
 
 #include "common.hpp"
+#include "sum_simple.hpp"
 #include "sum_unroll.hpp"
 #include "sum_chunked.hpp"
 #include "sum_manual.hpp"
+#include "mul_simple.hpp"
 #include "mul_unroll.hpp"
 #include "mul_manual.hpp"
 #include "mul_advanced.hpp"
@@ -39,10 +41,15 @@ int main(int argc, char **argv) {
         arr[i] = 1.000001;
         
     Timer t;
-    std::complex<double> result = av_unroll::sum(arr, to_sum);
+    std::complex<double> result = av_simple::sum(arr, to_sum);
     double elapsed = t.elapsed();
-    std::cout << av::inst_set << " unrolled result " << result << " got in " << elapsed << " usec" << std::endl;
+    std::cout << av::inst_set << " simple result " << result << " got in " << elapsed << " usec" << std::endl;
 
+    t.reset();
+    result = av_unroll::sum(arr, to_sum);
+    elapsed = t.elapsed();
+    std::cout << av::inst_set << " unrolled result " << result << " got in " << elapsed << " usec" << std::endl;
+    
     t.reset();
     result = av_chunked::sum(arr, to_sum);
     elapsed = t.elapsed();
@@ -52,6 +59,11 @@ int main(int argc, char **argv) {
     result = av_manual::sum(arr, to_sum);
     elapsed = t.elapsed();
     std::cout << av::inst_set << " manual result " << result << " got in " << elapsed << " usec" << std::endl;
+
+    t.reset();
+    result = av_mul_simple::mul(arr, to_sum);
+    elapsed = t.elapsed();
+    std::cout << av::inst_set << " simple multiplication result " << result << " got in " << elapsed << " usec" << std::endl;
 
     t.reset();
     result = av_mul_unroll::mul(arr, to_sum);
