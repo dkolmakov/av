@@ -29,13 +29,8 @@ namespace implementation {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
             __m128d realA = _mm_setr_pd(1.0, 1.0);
             __m128d imagA = _mm_setr_pd(0, 0);
-//             __m128d res = _mm_load_pd(reinterpret_cast<double *>(arr));
             
             for (std::size_t i = 0; i < count; i += 2) {
-//                 __m128d v0 = _mm_load_pd1(reinterpret_cast<double *>(arr + i));
-//                 __m128d v1 = _mm_load_pd1(reinterpret_cast<double *>(arr + i) + 1);
-//                 res = _mm_addsub_pd(_mm_mul_pd(v0, res), _mm_shuffle_pd(_mm_mul_pd(v1, res), _mm_mul_pd(v1, res), 1));
-                
                 __m128d B0 = _mm_loadu_pd((double*)(arr + i));                       // [m n o p]
                 __m128d B2 = _mm_loadu_pd((double*)(arr + i + 1));                   // [q r s t]
                 __m128d realB = _mm_unpacklo_pd(B0, B2);                         // [m q o s]
@@ -54,7 +49,6 @@ namespace implementation {
                 imagA     = _mm_add_pd(rAiB, rBiA);          // [D0i D2i | D1i D3i]                
             }
             
-//             _mm_store_pd(reinterpret_cast<double *>(acc), res);
             // interleave the separate real and imaginary vectors back into packed format
             __m128d dst0 = _mm_shuffle_pd(realA, imagA, 0b00);  // [D0r D0i | D1r D1i]
             __m128d dst2 = _mm_shuffle_pd(realA, imagA, 0b11);  // [D2r D2i | D3r D3i]
@@ -70,13 +64,7 @@ namespace implementation {
             __m256d imagA = _mm256_setr_pd(0, 0, 0, 0);
             
             for (std::size_t i = 0; i < count; i += 4) {
-                                         // low element first, little-endian style
-//                 __m256d A0 = _mm256_loadu_pd((double*)(arr + i));    // [A0r A0i  A1r A1i ] // [a b c d ]
-//                 __m256d A2 = _mm256_loadu_pd((double*)(arr + i + 2));                       // [e f g h ]
-//                 __m256d realA = _mm256_unpacklo_pd(A0, A2);  // [A0r A2r  A1r A3r ] // [a e c g ]
-//                 __m256d imagA = _mm256_unpackhi_pd(A0, A2);  // [A0i A2i  A1i A3i ] // [b f d h ]
-                // the in-lane behaviour of this interleaving is matched by the same in-lane behaviour when we recombine.
-                
+                // Took from https://stackoverflow.com/questions/39509746/how-to-square-two-complex-doubles-with-256-bit-avx-vectors
                 __m256d B0 = _mm256_loadu_pd((double*)(arr + i));                       // [m n o p]
                 __m256d B2 = _mm256_loadu_pd((double*)(arr + i + 2));                   // [q r s t]
                 __m256d realB = _mm256_unpacklo_pd(B0, B2);                         // [m q o s]

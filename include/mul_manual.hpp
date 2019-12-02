@@ -30,10 +30,11 @@ namespace implementation {
             __m128d res = _mm_load_pd(reinterpret_cast<double *>(arr));
             
             for (std::size_t i = 1; i < count; i += 1) {
+                // Original version id from https://www.codeproject.com/Articles/874396/Crunching-Numbers-with-AVX-and-AVX
+                // And improved one is here https://stackoverflow.com/questions/39509746/how-to-square-two-complex-doubles-with-256-bit-avx-vectors
                 __m128d v0 = _mm_loadu_pd(reinterpret_cast<double *>(arr + i));
                 
                 __m128d tmp0 = _mm_mul_pd(res, v0);
-//                 v0 = _mm_permute_pd(v0, 0x0);
                 v0 = _mm_shuffle_pd(v0, v0, 1);
                 
                 __m128d odd_signbits = _mm_setr_pd(0, -0.0);
