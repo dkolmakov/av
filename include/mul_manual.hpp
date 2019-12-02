@@ -25,86 +25,63 @@ namespace implementation {
     };
     
     template <class T>
-    struct chunk_mul<T, 2> {
+    struct chunk_mul<T, 1> {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            __m128d realA = _mm_setr_pd(1.0, 1.0);
-            __m128d imagA = _mm_setr_pd(0, 0);
-//             __m128d res = _mm_load_pd(reinterpret_cast<double *>(arr));
+            __m128d res = _mm_load_pd(reinterpret_cast<double *>(arr));
             
-            for (std::size_t i = 0; i < count; i += 2) {
-//                 __m128d v0 = _mm_load_pd1(reinterpret_cast<double *>(arr + i));
-//                 __m128d v1 = _mm_load_pd1(reinterpret_cast<double *>(arr + i) + 1);
-//                 res = _mm_addsub_pd(_mm_mul_pd(v0, res), _mm_shuffle_pd(_mm_mul_pd(v1, res), _mm_mul_pd(v1, res), 1));
+            for (std::size_t i = 1; i < count; i += 1) {
+                __m128d v0 = _mm_loadu_pd(reinterpret_cast<double *>(arr + i));
                 
-                __m128d B0 = _mm_loadu_pd((double*)(arr + i));                       // [m n o p]
-                __m128d B2 = _mm_loadu_pd((double*)(arr + i + 1));                   // [q r s t]
-                __m128d realB = _mm_unpacklo_pd(B0, B2);                         // [m q o s]
-                __m128d imagB = _mm_unpackhi_pd(B0, B2);                         // [n r p t]
+                __m128d tmp0 = _mm_mul_pd(res, v0);
+//                 v0 = _mm_permute_pd(v0, 0x0);
+                v0 = _mm_shuffle_pd(v0, v0, 1);
                 
-                // desired:  real=rArB - iAiB,  imag=rAiB + rBiA
-                __m128d realprod = _mm_mul_pd(realA, realB);
-                __m128d imagprod = _mm_mul_pd(imagA, imagB);
+                __m128d odd_signbits = _mm_setr_pd(0, -0.0);
+                res = _mm_xor_pd(res, odd_signbits);
                 
-                __m128d rAiB     = _mm_mul_pd(realA, imagB);
-                __m128d rBiA     = _mm_mul_pd(realB, imagA);
-
-                // gcc and clang will contract these into FMA.  (clang needs -ffp-contract=fast)
-                // Doing it manually would remove the option to compile for non-FMA targets
-                realA     = _mm_sub_pd(realprod, imagprod);  // [D0r D2r | D1r D3r]
-                imagA     = _mm_add_pd(rAiB, rBiA);          // [D0i D2i | D1i D3i]                
+                __m128d tmp1 = _mm_mul_pd(res, v0);
+                
+                res = _mm_addsub_pd(tmp0, tmp1);
             }
             
-//             _mm_store_pd(reinterpret_cast<double *>(acc), res);
-            // interleave the separate real and imaginary vectors back into packed format
-            __m128d dst0 = _mm_shuffle_pd(realA, imagA, 0b00);  // [D0r D0i | D1r D1i]
-            __m128d dst2 = _mm_shuffle_pd(realA, imagA, 0b11);  // [D2r D2i | D3r D3i]
-            _mm_storeu_pd((double*) acc, dst0);
-            _mm_storeu_pd((double*)(acc + 1), dst2);
+            _mm_store_pd(reinterpret_cast<double *>(acc), res);
+        }
+    };
+
+    template <class T>
+    struct chunk_mul<T, 2> {
+        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
+            __m256d res = _mm256_setr_pd(1.0, 0, 1.0, 0);
+            
+            for (std::size_t i = 0; i < count; i += 2) {
+                __m256d vec2 = _mm256_loadu_pd(reinterpret_cast<double *>(arr + i));
+                
+                /* Step 1: Multiply res and vec2 */
+                __m256d vec3 = _mm256_mul_pd(res, vec2);
+
+                /* Step 2: Switch the real and imaginary elements of vec2 */
+                vec2 = _mm256_permute_pd(vec2, 0x5);    // gcc turns this into the slower lane-crossing VPERMPD, not VPERMILPD, but clang is ok.
+                
+                /* Step 3: Negate the imaginary elements of vec2 */
+                    //  vec2 = _mm256_mul_pd(vec2, neg);       // this is much slower than XOR
+                // Flipping the sign bit in vec1 lets this run in parallel with the shuffle on vec2, reducing latency
+                //__m256d odd_signbits = _mm256_castsi256_pd( _mm256_setr_epi64x(0, 1ULL<<63, 0, 1ULL<<63));
+                __m256d odd_signbits = _mm256_setr_pd(0, -0.0, 0, -0.0);
+                res = _mm256_xor_pd(res, odd_signbits);
+                
+                /* Step 4: Multiply vec1 and the modified vec2 */
+                __m256d vec4 = _mm256_mul_pd(res, vec2);
+
+                /* Horizontally subtract the elements in vec3 and vec4 */
+                res = _mm256_hsub_pd(vec3, vec4);
+            }
+            
+            _mm256_storeu_pd((double*) acc, res);
         }
     };
 
     template <class T>
     struct chunk_mul<T, 4> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            __m256d realA = _mm256_setr_pd(1.0, 1.0, 1.0, 1.0);
-            __m256d imagA = _mm256_setr_pd(0, 0, 0, 0);
-            
-            for (std::size_t i = 0; i < count; i += 4) {
-                                         // low element first, little-endian style
-//                 __m256d A0 = _mm256_loadu_pd((double*)(arr + i));    // [A0r A0i  A1r A1i ] // [a b c d ]
-//                 __m256d A2 = _mm256_loadu_pd((double*)(arr + i + 2));                       // [e f g h ]
-//                 __m256d realA = _mm256_unpacklo_pd(A0, A2);  // [A0r A2r  A1r A3r ] // [a e c g ]
-//                 __m256d imagA = _mm256_unpackhi_pd(A0, A2);  // [A0i A2i  A1i A3i ] // [b f d h ]
-                // the in-lane behaviour of this interleaving is matched by the same in-lane behaviour when we recombine.
-                
-                __m256d B0 = _mm256_loadu_pd((double*)(arr + i));                       // [m n o p]
-                __m256d B2 = _mm256_loadu_pd((double*)(arr + i + 2));                   // [q r s t]
-                __m256d realB = _mm256_unpacklo_pd(B0, B2);                         // [m q o s]
-                __m256d imagB = _mm256_unpackhi_pd(B0, B2);                         // [n r p t]
-
-                // desired:  real=rArB - iAiB,  imag=rAiB + rBiA
-                __m256d realprod = _mm256_mul_pd(realA, realB);
-                __m256d imagprod = _mm256_mul_pd(imagA, imagB);
-                
-                __m256d rAiB     = _mm256_mul_pd(realA, imagB);
-                __m256d rBiA     = _mm256_mul_pd(realB, imagA);
-
-                // gcc and clang will contract these into FMA.  (clang needs -ffp-contract=fast)
-                // Doing it manually would remove the option to compile for non-FMA targets
-                realA     = _mm256_sub_pd(realprod, imagprod);  // [D0r D2r | D1r D3r]
-                imagA     = _mm256_add_pd(rAiB, rBiA);          // [D0i D2i | D1i D3i]
-            }
-            
-            // interleave the separate real and imaginary vectors back into packed format
-            __m256d dst0 = _mm256_shuffle_pd(realA, imagA, 0b0000);  // [D0r D0i | D1r D1i]
-            __m256d dst2 = _mm256_shuffle_pd(realA, imagA, 0b1111);  // [D2r D2i | D3r D3i]
-            _mm256_storeu_pd((double*) acc, dst0);
-            _mm256_storeu_pd((double*)(acc + 2), dst2);
-        }
-    };
-
-    template <class T>
-    struct chunk_mul<T, 8> {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
             std::cout << "No solution for AVX512 yet" << std::endl;
             chunk_mul<T, 0>::compute(acc, arr, count);
@@ -114,7 +91,7 @@ namespace implementation {
         }
     };
 
-    template <class T, std::size_t chunk_size = av::SIMD_REG_SIZE / sizeof(T)>
+    template <class T, std::size_t chunk_size = av::SIMD_REG_SIZE / sizeof(T) / 2>
     struct mul;
     
     template <class T>

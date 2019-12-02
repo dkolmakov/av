@@ -23,7 +23,9 @@ SUM_UNROLL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/sum_unroll,$(BINARIES))
 SUM_CHUNKED_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/sum_chunked,$(BINARIES))
 SUM_MANUAL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/sum_man,$(BINARIES))
 
+MUL_UNROLL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/mul_unroll,$(BINARIES))
 MUL_MANUAL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/mul_man,$(BINARIES))
+MUL_ADVANCED_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/mul_adv,$(BINARIES))
 
 all: $(OBJDIR) $(BINDIR) $(BINARIES) asm
 
@@ -63,6 +65,7 @@ $(OBJDIR)/%.oavx: %.cpp
 $(OBJDIR)/%.oavx512: %.cpp
 	$(CXX) $(CXXFLAGS) -mavx512f $(INCLUDES) -c $< -o $@ 
 
+	
 $(LOGDIR)/sum_unroll%: $(BINDIR)/$(APP)%
 	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$2}' > $@
 
@@ -72,10 +75,16 @@ $(LOGDIR)/sum_chunked%: $(BINDIR)/$(APP)%
 $(LOGDIR)/sum_man%: $(BINDIR)/$(APP)%
 	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$6}' > $@
 	
-$(LOGDIR)/mul_man%: $(BINDIR)/$(APP)%
+$(LOGDIR)/mul_unroll%: $(BINDIR)/$(APP)%
 	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$8}' > $@
 
-asm: $(LOGDIR) $(SUM_UNROLL_ASM) $(SUM_CHUNKED_ASM) $(SUM_MANUAL_ASM) $(MUL_MANUAL_ASM)
+$(LOGDIR)/mul_man%: $(BINDIR)/$(APP)%
+	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$10}' > $@
+
+$(LOGDIR)/mul_adv%: $(BINDIR)/$(APP)%
+	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$12}' > $@
+	
+asm: $(LOGDIR) $(SUM_UNROLL_ASM) $(SUM_CHUNKED_ASM) $(SUM_MANUAL_ASM) $(MUL_UNROLL_ASM) $(MUL_MANUAL_ASM) $(MUL_ADVANCED_ASM)
 
 	
 

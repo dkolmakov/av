@@ -10,7 +10,9 @@
 #include "sum_unroll.hpp"
 #include "sum_chunked.hpp"
 #include "sum_manual.hpp"
+#include "mul_unroll.hpp"
 #include "mul_manual.hpp"
+#include "mul_advanced.hpp"
 
 class Timer
 {
@@ -52,9 +54,19 @@ int main(int argc, char **argv) {
     std::cout << av::inst_set << " manual result " << result << " got in " << elapsed << " usec" << std::endl;
 
     t.reset();
+    result = av_mul_unroll::mul(arr, to_sum);
+    elapsed = t.elapsed();
+    std::cout << av::inst_set << " unrolled multiplication result " << result << " got in " << elapsed << " usec" << std::endl;
+
+    t.reset();
     result = av_mul_manual::mul(arr, to_sum);
     elapsed = t.elapsed();
     std::cout << av::inst_set << " manual multiplication result " << result << " got in " << elapsed << " usec" << std::endl;
+
+    t.reset();
+    result = av_mul_advanced::mul(arr, to_sum);
+    elapsed = t.elapsed();
+    std::cout << av::inst_set << " advanced multiplication result " << result << " got in " << elapsed << " usec" << std::endl;
     
     return 0;
 }
