@@ -13,47 +13,49 @@ namespace implementation {
     struct chunk_sum;
     
     template <class T>
-    struct chunk_sum<T, 1> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            __m128d res = _mm_xor_pd(res, res);
-            for (std::size_t i = 0; i < count; i += 2) {
-                __m128d data0 = _mm_load_pd(reinterpret_cast<double *>(arr + i));
-                res = _mm_add_pd(res, data0);
-                __m128d data1 = _mm_load_pd(reinterpret_cast<double *>(arr + i + 1));
-                res = _mm_add_pd(res, data1);
-            }
-            _mm_store_pd(reinterpret_cast<double *>(acc), res);
-        }
-    };
-
-    template <class T>
     struct chunk_sum<T, 2> {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            __m256d res = _mm256_xor_pd(res, res);
-            for (std::size_t i = 0; i < count; i += 2) {
-                __m256d data = _mm256_load_pd(reinterpret_cast<double *>(arr + i));
-                res = _mm256_add_pd(res, data);
+            __m128d res = _mm_setr_pd(0, 0);
+            __m128d data0 = _mm_loadu_pd(reinterpret_cast<double *>(arr));
+            
+            for (std::size_t i = 1; i < count - 1; i += 2) {
+                __m128d data1 = _mm_loadu_pd(reinterpret_cast<double *>(arr + i));
+                res = _mm_add_pd(res, data0);
+                data0 = _mm_loadu_pd(reinterpret_cast<double *>(arr + i + 1));
+                res = _mm_add_pd(res, data1);
             }
-            _mm256_store_pd(reinterpret_cast<double *>(acc), res);
+            
+            res = _mm_add_pd(res, data0);
+            __m128d data1 = _mm_loadu_pd(reinterpret_cast<double *>(arr + count - 1));
+            res = _mm_add_pd(res, data1);
+            _mm_store_pd(reinterpret_cast<double *>(acc), res);
         }
     };
 
     template <class T>
     struct chunk_sum<T, 4> {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            for (std::size_t i = 0; i < count; i += 4) {
-                acc[0] += arr[i];
-                acc[1] += arr[i + 1];
-                acc[2] += arr[i + 2];
-                acc[3] += arr[i + 3];
+            __m256d res = _mm256_setr_pd(0, 0, 0, 0);
+            __m256d data0 = _mm256_loadu_pd(reinterpret_cast<double *>(arr));
+
+            for (std::size_t i = 2; i < count - 2; i += 4) {
+                __m256d data1 = _mm256_loadu_pd(reinterpret_cast<double *>(arr + i));
+                res = _mm256_add_pd(res, data0);
+                data0 = _mm256_loadu_pd(reinterpret_cast<double *>(arr + i + 2));
+                res = _mm256_add_pd(res, data1);
             }
+            
+            res = _mm256_add_pd(res, data0);
+            __m256d data1 = _mm256_loadu_pd(reinterpret_cast<double *>(arr + count - 2));
+            res = _mm256_add_pd(res, data1);
+            _mm256_store_pd(reinterpret_cast<double *>(acc), res);
         }
     };
 
     template <class T>
     struct chunk_sum<T, 8> {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            for (std::size_t i = 0; i < count; i += 8) {
+            for (std::size_t i = 0; i < count; i += 4) {
                 acc[0] += arr[i];
                 acc[1] += arr[i + 1];
                 acc[2] += arr[i + 2];
@@ -65,8 +67,8 @@ namespace implementation {
             }
         }
     };
-    
-    template <class T, std::size_t chunk_size = av::SIMD_REG_SIZE / sizeof(T) / 2>
+
+    template <class T, std::size_t chunk_size = av::SIMD_REG_SIZE / sizeof(T) >
     struct sum;
     
     template <class T>
