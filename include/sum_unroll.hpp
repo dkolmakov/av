@@ -79,60 +79,38 @@ namespace implementation {
         }
     };
     
-    template <class T, std::size_t chunk_size = av::SIMD_REG_SIZE / sizeof(T) >
-    struct sum;
-    
-    template <class T>
-    struct sum<T, 0> {
-        static force_inline std::complex<T> compute(std::complex<T> *arr, const std::size_t count) {
-            // Default implementation
-            std::complex<T> result(0,0);
-            
-            asm volatile ("nop;nop;nop;");
-            for (std::size_t i = 0; i < count; i++) {
-                result += arr[i];
-            }
-            asm volatile ("nop;nop;nop;");
-            
-            return result;
-        }
-    };
-    
     template <class T, std::size_t chunk_size>
-    struct sum {
-        static force_inline std::complex<T> compute(std::complex<T> *arr, std::size_t count) {
-            // Specialized implementation
-            std::complex<T> result(0,0);
+    struct chunk_sum {
+        static force_inline std::complex<T> compute(std::complex<T> *arr) {
+            T real = arr[0].real() + arr[1].real();
+            T imag = arr[0].imag() + arr[1].imag();
             
-            asm volatile ("nop;nop;nop;");
-            // Sum by chunks
-            std::size_t i = 0;
-            while (i + chunk_size < count) {
-                result += chunk_sum<T, chunk_size>::compute(arr + i);
-                i += chunk_size;
-            }
-            asm volatile ("nop;nop;nop;");
-            
-            // Add the remainder
-            for (; i < count; i++) {
-                result += arr[i];
-            }
-            
-            return result;
+            return std::complex<T>(real, imag);
         }
     };
-    
+   
 }
 
-    template<class T>
+    template<class T, std::size_t chunk_size>
     static std::complex<T> sum(std::complex<T> *arr, std::size_t count) {
-        return implementation::sum<T>::compute(arr, count);
+        std::complex<T> result(0,0);
+        std::size_t i = 0;
+        
+        // Sum by chunks
+        asm volatile ("nop;nop;nop;");
+        for (; i + chunk_size < count; i += chunk_size) {
+            result += implementation::chunk_sum<T, chunk_size>::compute(arr + i);
+        }
+        asm volatile ("nop;nop;nop;");
+        
+        // Add the remainder
+        for (; i < count; i++) {
+            result += arr[i];
+        }
+        
+        return result;
     }
 
-    template<class T>
-    static std::complex<T> sum_default(std::complex<T> *arr, std::size_t count) {
-        return implementation::sum<T, 0>::compute(arr, count);
-    }
     
 }
 

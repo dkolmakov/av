@@ -32,7 +32,14 @@ private:
 
 const struct av::CalculationTask<double> tasks[] = {
     {"Simple summation", av_simple::sum},
-    {"Unrolled summation", av_unroll::sum},
+    {"Unrolled summation chunk=1", av_unroll::sum<double, 2>},
+    {"Unrolled summation chunk=2", av_unroll::sum<double, 4>},
+    {"Unrolled summation chunk=4", av_unroll::sum<double, 8>},
+    {"Unrolled summation chunk=8", av_unroll::sum<double, 16>},
+    {"Chunked summation chunk=1", av_chunked::sum<double, 1>},
+    {"Chunked summation chunk=2", av_chunked::sum<double, 2>},
+    {"Chunked summation chunk=4", av_chunked::sum<double, 4>},
+    {"Chunked summation chunk=8", av_chunked::sum<double, 8>},
     {"Manual summation", av_manual::sum},
     {"Simple multiplication", av_mul_simple::mul},
     {"Unrolled multiplication", av_mul_unroll::mul},
