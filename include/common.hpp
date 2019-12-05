@@ -1,8 +1,9 @@
 #pragma once
 
+#include <complex>
+
 namespace av {
-    
-    #define force_inline inline __attribute__((always_inline))
+#define force_inline inline __attribute__((always_inline))
     
 #ifdef __AVX512F__
     const std::string inst_set = "AVX512F";
@@ -17,5 +18,12 @@ namespace av {
     const std::string inst_set = "Default";
     constexpr std::size_t SIMD_REG_SIZE = 0;
 #endif
+
+
+template<class T>
+struct CalculationTask {
+  std::string label;
+  std::complex<T> (*func)(std::complex<T> *arr, std::size_t count);    
+};
 
 }

@@ -30,6 +30,16 @@ private:
     std::chrono::time_point<clock_> beg_;
 };
 
+const struct av::CalculationTask<double> tasks[] = {
+    {"Simple summation", av_simple::sum},
+    {"Unrolled summation", av_unroll::sum},
+    {"Manual summation", av_manual::sum},
+    {"Simple multiplication", av_mul_simple::mul},
+    {"Unrolled multiplication", av_mul_unroll::mul},
+    {"Manual multiplication", av_mul_manual::mul},
+    {"Advanced multiplication", av_mul_advanced::mul}
+};
+
 int main(int argc, char **argv) {
     if (argc < 2)
         return 1;
@@ -40,45 +50,15 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < to_sum; i++)
         arr[i] = 1.000001;
         
+    std::cout << "Starting tests for: " << av::inst_set << " instruction set" << std::endl;
+
     Timer t;
-    std::complex<double> result = av_simple::sum(arr, to_sum);
-    double elapsed = t.elapsed();
-    std::cout << av::inst_set << " simple result " << result << " got in " << elapsed << " usec" << std::endl;
-
-    t.reset();
-    result = av_unroll::sum(arr, to_sum);
-    elapsed = t.elapsed();
-    std::cout << av::inst_set << " unrolled result " << result << " got in " << elapsed << " usec" << std::endl;
-    
-    t.reset();
-    result = av_chunked::sum(arr, to_sum);
-    elapsed = t.elapsed();
-    std::cout << av::inst_set << " chunked result " << result << " got in " << elapsed << " usec" << std::endl;
-    
-    t.reset();
-    result = av_manual::sum(arr, to_sum);
-    elapsed = t.elapsed();
-    std::cout << av::inst_set << " manual result " << result << " got in " << elapsed << " usec" << std::endl;
-
-    t.reset();
-    result = av_mul_simple::mul(arr, to_sum);
-    elapsed = t.elapsed();
-    std::cout << av::inst_set << " simple multiplication result " << result << " got in " << elapsed << " usec" << std::endl;
-
-    t.reset();
-    result = av_mul_unroll::mul(arr, to_sum);
-    elapsed = t.elapsed();
-    std::cout << av::inst_set << " unrolled multiplication result " << result << " got in " << elapsed << " usec" << std::endl;
-
-    t.reset();
-    result = av_mul_manual::mul(arr, to_sum);
-    elapsed = t.elapsed();
-    std::cout << av::inst_set << " manual multiplication result " << result << " got in " << elapsed << " usec" << std::endl;
-
-    t.reset();
-    result = av_mul_advanced::mul(arr, to_sum);
-    elapsed = t.elapsed();
-    std::cout << av::inst_set << " advanced multiplication result " << result << " got in " << elapsed << " usec" << std::endl;
+    for (auto& task : tasks) {
+        t.reset();
+        std::complex<double> result = task.func(arr, to_sum);
+        double elapsed = t.elapsed();
+        std::cout << task.label << " result " << result << " got in " << elapsed << " usec" << std::endl;
+    }
     
     return 0;
 }
