@@ -1,13 +1,16 @@
 with import <nixpkgs> {};
 
-let common = [
-    gcc9
-    gdb
-]; 
-in stdenvNoCC.mkDerivation rec {
+{
+
+eight = stdenvNoCC.mkDerivation rec {
 		name = "hm-env";
-		buildInputs = common;
+		buildInputs = [gcc9 gdb];
+};
+
+nine = stdenvNoCC.mkDerivation rec {
+		name = "hm-env";
+		buildInputs = [gcc9 gdb];
+};
+
 }
-
-
 
