@@ -116,9 +116,12 @@ namespace implementation {
 //             return std::complex<T>(real, imag);
 //         }
 //     };
+
+    template <class T, std::size_t chunk_size, std::size_t parity_checker>
+    struct chunk_sum;
     
     template <class T, std::size_t chunk_size>
-    struct chunk_sum {
+    struct chunk_sum<T, chunk_size, 0> {
         static force_inline std::complex<T> compute(std::complex<T> *arr) {
             T real = real_sum<T, chunk_size>::compute(arr);
             T imag = imag_sum<T, chunk_size>::compute(arr);
@@ -126,7 +129,20 @@ namespace implementation {
             return std::complex<T>(real, imag);
         }
     };
-   
+
+    template <class T, std::size_t chunk_size, std::size_t parity_checker>
+    struct chunk_sum {
+        static force_inline std::complex<T> compute(std::complex<T> *arr) {
+            // Default implementation
+            std::complex<T> result(0,0);
+            
+            for (std::size_t i = 0; i < chunk_size; i++) {
+                result += arr[i];
+            }
+
+            return result;
+        }
+    };
 }
 
     template<class T, std::size_t chunk_size>
@@ -137,7 +153,7 @@ namespace implementation {
         // Sum by chunks
         asm volatile ("nop;nop;nop;");
         for (; i + chunk_size < count; i += chunk_size) {
-            result += implementation::chunk_sum<T, chunk_size>::compute(arr + i);
+            result += implementation::chunk_sum<T, chunk_size, chunk_size % 2>::compute(arr + i);
         }
         asm volatile ("nop;nop;nop;");
         

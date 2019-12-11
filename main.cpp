@@ -32,10 +32,12 @@ private:
 
 const struct av::CalculationTask<double> tasks[] = {
     {"Simple summation", av_simple::sum},
-    {"Unrolled summation chunk=1", av_unroll::sum<double, 2>},
-    {"Unrolled summation chunk=2", av_unroll::sum<double, 4>},
-    {"Unrolled summation chunk=4", av_unroll::sum<double, 8>},
-    {"Unrolled summation chunk=8", av_unroll::sum<double, 16>},
+    {"Unrolled summation chunk=2", av_unroll::sum<double, 1>},
+    {"Unrolled summation chunk=2", av_unroll::sum<double, 2>},
+    {"Unrolled summation chunk=4", av_unroll::sum<double, 4>},
+    {"Unrolled summation chunk=8", av_unroll::sum<double, 8>},
+    {"Unrolled summation chunk=16", av_unroll::sum<double, 16>},
+    {"Unrolled summation chunk=32", av_unroll::sum<double, 32>},
     {"Chunked summation chunk=1", av_chunked::sum<double, 1>},
     {"Chunked summation chunk=2", av_chunked::sum<double, 2>},
     {"Chunked summation chunk=4", av_chunked::sum<double, 4>},
@@ -44,7 +46,12 @@ const struct av::CalculationTask<double> tasks[] = {
     {"Simple multiplication", av_mul_simple::mul},
     {"Unrolled multiplication", av_mul_unroll::mul},
     {"Manual multiplication", av_mul_manual::mul},
-    {"Advanced multiplication", av_mul_advanced::mul}
+    {"Advanced multiplication 1", av_mul_advanced::mul<double, 1>},
+    {"Advanced multiplication 2", av_mul_advanced::mul<double, 2>},
+    {"Advanced multiplication 4", av_mul_advanced::mul<double, 4>},
+    {"Advanced multiplication 8", av_mul_advanced::mul<double, 8>},
+    {"Advanced multiplication 16", av_mul_advanced::mul<double, 16>},
+    {"Advanced multiplication 32", av_mul_advanced::mul<double, 32>}
 };
 
 int main(int argc, char **argv) {
