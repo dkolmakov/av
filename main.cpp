@@ -32,7 +32,7 @@ private:
 
 const struct av::CalculationTask<double> tasks[] = {
     {"Simple summation", av_simple::sum},
-    {"Unrolled summation chunk=2", av_unroll::sum<double, 1>},
+    {"Unrolled summation chunk=1", av_unroll::sum<double, 1>},
     {"Unrolled summation chunk=2", av_unroll::sum<double, 2>},
     {"Unrolled summation chunk=4", av_unroll::sum<double, 4>},
     {"Unrolled summation chunk=8", av_unroll::sum<double, 8>},
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < to_sum; i++)
         arr[i] = 1.000001;
         
-    std::cout << "Starting tests for: " << av::inst_set << " instruction set" << std::endl;
+    std::cout << std::endl << std::endl << "Starting tests for: " << av::inst_set << " instruction set" << std::endl;
 
     Timer t;
     for (auto& task : tasks) {

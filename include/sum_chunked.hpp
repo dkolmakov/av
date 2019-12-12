@@ -8,72 +8,24 @@ namespace av_chunked {
     
 namespace implementation {
 
-    template <class T, std::size_t chunk_size>
+    template <class T, std::size_t index>
     struct chunk_sum;
+
+    template <class T>
+    struct chunk_sum<T, 0> {
+        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
+            acc[0] += arr[0];
+        }
+    };
     
-    template <class T>
-    struct chunk_sum<T, 1> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, const std::size_t count) {
-            for (std::size_t i = 0; i < count; i++) {
-                acc[0] += arr[i];
-            }
-        }
-    };
-
-    template <class T>
-    struct chunk_sum<T, 2> {
-        static force_inline void compute(std::complex<T> * acc, std::complex<T> * arr, const std::size_t count) {
-            for (std::size_t i = 0; i < count; i += 2) {
-                acc[0] += arr[i];
-                acc[1] += arr[i + 1];
-            }
-        }
-    };
-
-    template <class T>
-    struct chunk_sum<T, 4> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, const std::size_t count) {
-            for (std::size_t i = 0; i < count; i += 4) {
-                acc[0] += arr[i];
-                acc[1] += arr[i + 1];
-                acc[2] += arr[i + 2];
-                acc[3] += arr[i + 3];
-            }
-        }
-    };
-
-    template <class T>
-    struct chunk_sum<T, 8> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, const std::size_t count) {
-            for (std::size_t i = 0; i < count; i += 8) {
-                acc[0] += arr[i];
-                acc[1] += arr[i + 1];
-                acc[2] += arr[i + 2];
-                acc[3] += arr[i + 3];
-                acc[4] += arr[i + 4];
-                acc[5] += arr[i + 5];
-                acc[6] += arr[i + 6];
-                acc[7] += arr[i + 7];
-            }
-        }
-    };
-
-    template <class T, std::size_t chunk_size>
+    template <class T, std::size_t index>
     struct chunk_sum {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, const std::size_t count) {
-            for (std::size_t i = 0; i < count; i += 8) {
-                acc[0] += arr[i];
-                acc[1] += arr[i + 1];
-                acc[2] += arr[i + 2];
-                acc[3] += arr[i + 3];
-                acc[4] += arr[i + 4];
-                acc[5] += arr[i + 5];
-                acc[6] += arr[i + 6];
-                acc[7] += arr[i + 7];
-            }
+        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
+            chunk_sum<T, index - 1>::compute(acc, arr);
+            acc[index] += arr[index];
         }
     };
-    
+
 }
 
     template<class T, std::size_t chunk_size>
@@ -88,7 +40,9 @@ namespace implementation {
         
         // Sum by chunks
         asm volatile ("nop;nop;nop;");
-        implementation::chunk_sum<T, chunk_size>::compute(acc, arr, to_sum);
+        for (std::size_t i = 0; i < to_sum; i += chunk_size) {
+            implementation::chunk_sum<T, chunk_size - 1>::compute(acc, arr + i);
+        }
         asm volatile ("nop;nop;nop;");
         
         // Add the remainder
