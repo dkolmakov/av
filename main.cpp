@@ -14,7 +14,7 @@
 #include "mul_simple.hpp"
 #include "mul_unroll.hpp"
 #include "mul_manual.hpp"
-#include "mul_advanced.hpp"
+#include "mul_avx.hpp"
 
 class Timer
 {
@@ -46,12 +46,11 @@ const struct av::CalculationTask<double> tasks[] = {
     {"Simple multiplication", av_mul_simple::mul},
     {"Unrolled multiplication", av_mul_unroll::mul},
     {"Manual multiplication", av_mul_manual::mul},
-    {"Advanced multiplication 1", av_mul_advanced::mul<double, 1>},
-    {"Advanced multiplication 2", av_mul_advanced::mul<double, 2>},
-    {"Advanced multiplication 4", av_mul_advanced::mul<double, 4>},
-    {"Advanced multiplication 8", av_mul_advanced::mul<double, 8>},
-    {"Advanced multiplication 16", av_mul_advanced::mul<double, 16>},
-    {"Advanced multiplication 32", av_mul_advanced::mul<double, 32>}
+    {"Advanced multiplication 4", av_mul_avx::mul<double, 4>},
+    {"Advanced multiplication 8", av_mul_avx::mul<double, 8>},
+    {"Advanced multiplication 16", av_mul_avx::mul<double, 16>},
+    {"Advanced multiplication 32", av_mul_avx::mul<double, 32>},
+    {"Advanced multiplication 64", av_mul_avx::mul<double, 64>}
 };
 
 int main(int argc, char **argv) {

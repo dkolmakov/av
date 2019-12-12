@@ -91,10 +91,10 @@ namespace implementation {
                 // Took from https://stackoverflow.com/questions/39509746/how-to-square-two-complex-doubles-with-256-bit-avx-vectors
                 __m256d B0 = _mm256_loadu_pd((double*)(arr + i));                       // [m n o p]
                 __m256d B2 = _mm256_loadu_pd((double*)(arr + i + 2));                   // [q r s t]
-                __m256d B4 = _mm256_loadu_pd((double*)(arr + i + 4));                   // [m n o p]
-                __m256d B6 = _mm256_loadu_pd((double*)(arr + i + 6));                   // [q r s t]
                 __m256d realB = _mm256_unpacklo_pd(B0, B2);                         // [m q o s]
                 __m256d imagB = _mm256_unpackhi_pd(B0, B2);                         // [n r p t]
+                __m256d B4 = _mm256_loadu_pd((double*)(arr + i + 4));                   // [m n o p]
+                __m256d B6 = _mm256_loadu_pd((double*)(arr + i + 6));                   // [q r s t]
                 __m256d realD = _mm256_unpacklo_pd(B4, B6);                         // [m q o s]
                 __m256d imagD = _mm256_unpackhi_pd(B4, B6);                         // [n r p t]
 
