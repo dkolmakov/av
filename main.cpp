@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <chrono>
+#include <array>
 
 #include "common.hpp"
 #include "sum_simple.hpp"
@@ -15,6 +16,8 @@
 #include "mul_unroll.hpp"
 #include "mul_manual.hpp"
 #include "mul_avx.hpp"
+
+#include "test_harness.hpp"
 
 class Timer
 {
@@ -42,6 +45,8 @@ const struct av::CalculationTask<double> tasks[] = {
     {"Chunked summation chunk=2", av_chunked::sum<double, 2>},
     {"Chunked summation chunk=4", av_chunked::sum<double, 4>},
     {"Chunked summation chunk=8", av_chunked::sum<double, 8>},
+    {"Chunked summation chunk=16", av_chunked::sum<double, 16>},
+    {"Chunked summation chunk=32", av_chunked::sum<double, 32>},
     {"Manual summation", av_manual::sum},
     {"Simple multiplication", av_mul_simple::mul},
     {"Unrolled multiplication", av_mul_unroll::mul},
@@ -52,6 +57,13 @@ const struct av::CalculationTask<double> tasks[] = {
     {"Advanced multiplication 32", av_mul_avx::mul<double, 32>},
     {"Advanced multiplication 64", av_mul_avx::mul<double, 64>}
 };
+
+constexpr std::size_t chunk_sizes[] = {1, 2, 4, 8, 16, 24, 32, 48, 64};
+constexpr std::size_t chunks_num = sizeof(chunk_sizes) / sizeof(std::size_t);
+// constexpr std::array<std::size_t, 9> chunks_array = {1, 2, 4, 8, 16, 24, 32, 48, 64};
+
+const Benchmark<double> *unrolled_sum = Tests<double, av_unroll::ToTest, 9, chunk_sizes>::prepare_benchmarks();
+
 
 int main(int argc, char **argv) {
     if (argc < 2)
