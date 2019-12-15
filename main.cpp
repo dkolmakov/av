@@ -31,7 +31,7 @@ const struct BenchmarkWrapper<double>* tasks[] = {
     Tests<double, av_manual::ToTest, 1, 1>::prepare_benchmarks("Manual summation"),
     
     Tests<double, av_mul_simple::ToTest, 1, 1>::prepare_benchmarks("Simple multiplication"),
-    Tests<double, av_mul_unroll::ToTest, 1, 1>::prepare_benchmarks("Unrolled multiplication"),
+    Tests<double, av_mul_unroll::ToTest, 9, CHUNKS>::prepare_benchmarks("Unrolled multiplication"),
     Tests<double, av_mul_manual::ToTest, 1, 1>::prepare_benchmarks("Manual multiplication"),
     Tests<double, av_mul_avx::ToTest, 9, CHUNKS>::prepare_benchmarks("Advanced multiplication")
 };
