@@ -20,10 +20,4 @@ namespace av {
 #endif
 
 
-template<class T>
-struct CalculationTask {
-  std::string label;
-  std::complex<T> (*func)(std::complex<T> *arr, std::size_t count);    
-};
-
 }

@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <iostream>
 #include <cstdlib>
-#include <chrono>
 #include <array>
 
 #include "common.hpp"
@@ -19,50 +18,23 @@
 
 #include "test_harness.hpp"
 
-class Timer
-{
-public:
-    Timer() : beg_(clock_::now()) {}
-    void reset() { beg_ = clock_::now(); }
-    double elapsed() const {
-        return std::chrono::duration_cast<std::chrono::microseconds>
-            (clock_::now() - beg_).count(); }
-
-private:
-    typedef std::chrono::high_resolution_clock clock_;
-    std::chrono::time_point<clock_> beg_;
-};
-
-const struct av::CalculationTask<double> tasks[] = {
-    {"Simple summation", av_simple::sum},
-    {"Unrolled summation chunk=1", av_unroll::sum<double, 1>},
-    {"Unrolled summation chunk=2", av_unroll::sum<double, 2>},
-    {"Unrolled summation chunk=4", av_unroll::sum<double, 4>},
-    {"Unrolled summation chunk=8", av_unroll::sum<double, 8>},
-    {"Unrolled summation chunk=16", av_unroll::sum<double, 16>},
-    {"Unrolled summation chunk=32", av_unroll::sum<double, 32>},
-    {"Chunked summation chunk=1", av_chunked::sum<double, 1>},
-    {"Chunked summation chunk=2", av_chunked::sum<double, 2>},
-    {"Chunked summation chunk=4", av_chunked::sum<double, 4>},
-    {"Chunked summation chunk=8", av_chunked::sum<double, 8>},
-    {"Chunked summation chunk=16", av_chunked::sum<double, 16>},
-    {"Chunked summation chunk=32", av_chunked::sum<double, 32>},
-    {"Manual summation", av_manual::sum},
-    {"Simple multiplication", av_mul_simple::mul},
-    {"Unrolled multiplication", av_mul_unroll::mul},
-    {"Manual multiplication", av_mul_manual::mul},
-    {"Advanced multiplication 4", av_mul_avx::mul<double, 4>},
-    {"Advanced multiplication 8", av_mul_avx::mul<double, 8>},
-    {"Advanced multiplication 16", av_mul_avx::mul<double, 16>},
-    {"Advanced multiplication 32", av_mul_avx::mul<double, 32>},
-    {"Advanced multiplication 64", av_mul_avx::mul<double, 64>}
-};
-
-constexpr std::size_t chunk_sizes[] = {1, 2, 4, 8, 16, 24, 32, 48, 64};
-constexpr std::size_t chunks_num = sizeof(chunk_sizes) / sizeof(std::size_t);
+// static constexpr std::size_t chunk_sizes[] = {1, 2, 4, 8, 16, 24, 32, 48, 64};
+// constexpr std::size_t chunks_num = sizeof(chunk_sizes) / sizeof(std::size_t);
 // constexpr std::array<std::size_t, 9> chunks_array = {1, 2, 4, 8, 16, 24, 32, 48, 64};
 
-const Benchmark<double> *unrolled_sum = Tests<double, av_unroll::ToTest, 9, chunk_sizes>::prepare_benchmarks();
+#define CHUNKS 1, 2, 4, 8, 16, 24, 32, 48, 64
+
+const struct BenchmarkWrapper<double>* tasks[] = {
+    Tests<double, av_simple::ToTest, 1, 1>::prepare_benchmarks("Simple summation"),
+    Tests<double, av_unroll::ToTest, 9, CHUNKS>::prepare_benchmarks("Unrolled summation"),
+    Tests<double, av_chunked::ToTest, 9, CHUNKS>::prepare_benchmarks("Chunked summation"),
+    Tests<double, av_manual::ToTest, 1, 1>::prepare_benchmarks("Manual summation"),
+    
+    Tests<double, av_mul_simple::ToTest, 1, 1>::prepare_benchmarks("Simple multiplication"),
+    Tests<double, av_mul_unroll::ToTest, 1, 1>::prepare_benchmarks("Unrolled multiplication"),
+    Tests<double, av_mul_manual::ToTest, 1, 1>::prepare_benchmarks("Manual multiplication"),
+    Tests<double, av_mul_avx::ToTest, 9, CHUNKS>::prepare_benchmarks("Advanced multiplication")
+};
 
 
 int main(int argc, char **argv) {
@@ -78,11 +50,16 @@ int main(int argc, char **argv) {
     std::cout << std::endl << std::endl << "Starting tests for: " << av::inst_set << " instruction set" << std::endl;
 
     Timer t;
-    for (auto& task : tasks) {
-        t.reset();
-        std::complex<double> result = task.func(arr, to_sum);
-        double elapsed = t.elapsed();
-        std::cout << task.label << " result " << result << " got in " << elapsed << " usec" << std::endl;
+    for (auto task : tasks) {
+        for (std::size_t i = 0; i < task->size; i++) {
+            auto& bench = task->benchmarks[i];
+            
+            t.reset();
+            std::complex<double> result = bench.tf(arr, to_sum);
+            double elapsed = t.elapsed();
+            
+            std::cout << task->label<< " chunk " << bench.param << " result " << result << " got in " << elapsed << " usec" << std::endl;
+        }
     }
     
     return 0;

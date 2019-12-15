@@ -58,6 +58,12 @@ namespace implementation {
         return result;
     }
 
+    template<class T, std::size_t chunk_size>
+    struct ToTest {
+        static std::complex<T> to_test(std::complex<T> *arr, std::size_t count) {
+            return sum<T, chunk_size>(arr, count);
+        }
+    };
 }
 
 
