@@ -25,14 +25,14 @@
 #define CHUNKS 1, 2, 4, 8, 16, 24, 32, 48, 64
 
 const struct BenchmarkWrapper<double>* tasks[] = {
-    Tests<double, av_simple::ToTest, 1, 1>::prepare_benchmarks("Simple summation"),
+    Tests<double, av_simple::ToTest, 9, CHUNKS>::prepare_benchmarks("Simple summation"),
     Tests<double, av_unroll::ToTest, 9, CHUNKS>::prepare_benchmarks("Unrolled summation"),
     Tests<double, av_chunked::ToTest, 9, CHUNKS>::prepare_benchmarks("Chunked summation"),
-    Tests<double, av_manual::ToTest, 1, 1>::prepare_benchmarks("Manual summation"),
+    Tests<double, av_manual::ToTest, 9, CHUNKS>::prepare_benchmarks("Manual summation"),
     
-    Tests<double, av_mul_simple::ToTest, 1, 1>::prepare_benchmarks("Simple multiplication"),
+    Tests<double, av_mul_simple::ToTest, 9, CHUNKS>::prepare_benchmarks("Simple multiplication"),
     Tests<double, av_mul_unroll::ToTest, 9, CHUNKS>::prepare_benchmarks("Unrolled multiplication"),
-    Tests<double, av_mul_manual::ToTest, 1, 1>::prepare_benchmarks("Manual multiplication"),
+    Tests<double, av_mul_manual::ToTest, 9, CHUNKS>::prepare_benchmarks("Manual multiplication"),
     Tests<double, av_mul_avx::ToTest, 9, CHUNKS>::prepare_benchmarks("Advanced multiplication")
 };
 
@@ -48,9 +48,14 @@ int main(int argc, char **argv) {
         arr[i] = 1.000001;
         
     std::cout << std::endl << std::endl << "Starting tests for: " << av::inst_set << " instruction set" << std::endl;
-
+    std::cout << "\t\t\t";
+    for (auto i : {CHUNKS})
+        std::cout << "\t" << i;
+    std::cout << std::endl;
+    
     Timer t;
     for (auto task : tasks) {
+        std::cout << task->label << "\t";
         for (std::size_t i = 0; i < task->size; i++) {
             auto& bench = task->benchmarks[i];
             
@@ -58,8 +63,9 @@ int main(int argc, char **argv) {
             std::complex<double> result = bench.tf(arr, to_sum);
             double elapsed = t.elapsed();
             
-            std::cout << task->label<< " chunk " << bench.param << " result " << result << " got in " << elapsed << " usec" << std::endl;
+            std::cout << "\t" << elapsed;
         }
+        std::cout << std::endl;
     }
     
     return 0;
