@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <array>
+#include <vector>
 
 #include "common.hpp"
 #include "sum_simple.hpp"
@@ -24,33 +25,24 @@
 
 #define CHUNKS 1, 2, 4, 8, 16, 24, 32, 48, 64
 
-const struct BenchmarkWrapper<double>* tasks[] = {
+std::vector<BenchmarkWrapper<double>*> sum_tasks = {
     Tests<double, av_simple::ToTest, 9, CHUNKS>::prepare_benchmarks("Simple summation"),
     Tests<double, av_unroll::ToTest, 9, CHUNKS>::prepare_benchmarks("Unrolled summation"),
     Tests<double, av_chunked::ToTest, 9, CHUNKS>::prepare_benchmarks("Chunked summation"),
     Tests<double, av_manual::ToTest, 9, CHUNKS>::prepare_benchmarks("Manual summation"),
-    
+};
+
+std::vector<BenchmarkWrapper<double>*> mul_tasks = {
     Tests<double, av_mul_simple::ToTest, 9, CHUNKS>::prepare_benchmarks("Simple multiplication"),
     Tests<double, av_mul_unroll::ToTest, 9, CHUNKS>::prepare_benchmarks("Unrolled multiplication"),
     Tests<double, av_mul_manual::ToTest, 9, CHUNKS>::prepare_benchmarks("Manual multiplication"),
     Tests<double, av_mul_avx::ToTest, 9, CHUNKS>::prepare_benchmarks("Advanced multiplication")
 };
 
-
-int main(int argc, char **argv) {
-    if (argc < 2)
-        return 1;
-    
-    std::size_t to_sum = atoi(argv[1]);
-    std::complex<double> *arr = new std::complex<double>[to_sum];
-    
-    for (size_t i = 0; i < to_sum; i++)
-        arr[i] = 1.000001;
-        
-    std::cout << std::endl << std::endl << "Starting tests for: " << av::inst_set << " instruction set" << std::endl;
+void run_benchmarks(std::vector<BenchmarkWrapper<double>*> tasks, std::complex<double> *arr, std::size_t to_sum, std::complex<double> ref) {
     std::cout << "\t\t\t";
-    for (auto i : {CHUNKS})
-        std::cout << "\t" << i;
+    for (auto& bench : tasks[0]->benchmarks)
+        std::cout << "\t\t" << bench.param;
     std::cout << std::endl;
     
     Timer t;
@@ -61,12 +53,32 @@ int main(int argc, char **argv) {
             
             t.reset();
             std::complex<double> result = bench.tf(arr, to_sum);
-            double elapsed = t.elapsed();
-            
-            std::cout << "\t" << elapsed;
+            size_t elapsed = t.elapsed();
+                
+            printf("\t%lu (%0.2f)", elapsed, abs(result - ref));
         }
         std::cout << std::endl;
     }
+}
+
+int main(int argc, char **argv) {
+    if (argc < 2)
+        return 1;
     
+    std::size_t to_sum = atoi(argv[1]);
+    std::complex<double> *arr = new std::complex<double>[to_sum];
+    
+    for (size_t i = 0; i < to_sum; i++) {
+        arr[i] = 1.000001;
+    }
+        
+    std::complex<double> sum = av_simple::sum(arr, to_sum);
+    std::complex<double> mul = av_mul_simple::mul(arr, to_sum);
+
+    std::cout << std::endl << std::endl << "Starting tests for: " << av::inst_set << " instruction set" << std::endl;
+    
+    run_benchmarks(sum_tasks, arr, to_sum, sum);
+    run_benchmarks(mul_tasks, arr, to_sum, mul);
+   
     return 0;
 }

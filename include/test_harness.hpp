@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <vector>
 #include "common.hpp"
 
 class Timer
@@ -8,7 +9,7 @@ class Timer
 public:
     Timer() : start(clock_t::now()) {}
     void reset() { start = clock_t::now(); }
-    double elapsed() const {
+    std::size_t elapsed() const {
         return std::chrono::duration_cast<std::chrono::microseconds>
             (clock_t::now() - start).count(); }
 
@@ -28,10 +29,9 @@ template<class T>
 struct BenchmarkWrapper {
   std::size_t size;
   std::string label;
-  Benchmark<T> *benchmarks;
+  std::vector<Benchmark<T>> benchmarks;
   
-  BenchmarkWrapper(std::size_t _size, std::string _label) : size(_size), label(_label) {
-      benchmarks = new Benchmark<T>[size];
+  BenchmarkWrapper(std::size_t _size, std::string _label) : size(_size), label(_label), benchmarks(size) {
   }
   
   ~BenchmarkWrapper() {
@@ -43,9 +43,9 @@ struct BenchmarkWrapper {
 template<class T, template<class TT, std::size_t size> class F, std::size_t index, std::size_t test_val, std::size_t... test_vals>
 struct GenBenchmark {
     static void gen(BenchmarkWrapper<T> *wrapper) {
-        GenBenchmark<T, F, index - 1, test_vals...>::gen(wrapper);
         wrapper->benchmarks[index].tf = F<T, test_val>::to_test;
         wrapper->benchmarks[index].param = test_val;
+        GenBenchmark<T, F, index - 1, test_vals...>::gen(wrapper);
     }
 };
 
