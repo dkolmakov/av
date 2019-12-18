@@ -16,6 +16,7 @@
 #include "mul_unroll.hpp"
 #include "mul_manual.hpp"
 #include "mul_avx.hpp"
+#include "mul_sse.hpp"
 
 #include "test_harness.hpp"
 
@@ -24,19 +25,24 @@
 // constexpr std::array<std::size_t, 9> chunks_array = {1, 2, 4, 8, 16, 24, 32, 48, 64};
 
 #define CHUNKS 1, 2, 4, 8, 16, 24, 32, 48, 64
+#define CHUNKS_NUM 9
+
+// #define CHUNKS 16
+// #define CHUNKS_NUM 1
 
 std::vector<BenchmarkWrapper<double>*> sum_tasks = {
-    Tests<double, av_simple::ToTest, 9, CHUNKS>::prepare_benchmarks("Simple summation"),
-    Tests<double, av_unroll::ToTest, 9, CHUNKS>::prepare_benchmarks("Unrolled summation"),
-    Tests<double, av_chunked::ToTest, 9, CHUNKS>::prepare_benchmarks("Chunked summation"),
-    Tests<double, av_manual::ToTest, 9, CHUNKS>::prepare_benchmarks("Manual summation"),
+    Tests<double, av_simple::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Simple summation"),
+    Tests<double, av_unroll::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Unrolled summation"),
+    Tests<double, av_chunked::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Chunked summation"),
+    Tests<double, av_manual::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Manual summation"),
 };
 
 std::vector<BenchmarkWrapper<double>*> mul_tasks = {
-    Tests<double, av_mul_simple::ToTest, 9, CHUNKS>::prepare_benchmarks("Simple multiplication"),
-    Tests<double, av_mul_unroll::ToTest, 9, CHUNKS>::prepare_benchmarks("Unrolled multiplication"),
-    Tests<double, av_mul_manual::ToTest, 9, CHUNKS>::prepare_benchmarks("Manual multiplication"),
-    Tests<double, av_mul_avx::ToTest, 9, CHUNKS>::prepare_benchmarks("Advanced multiplication")
+    Tests<double, av_mul_simple::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Simple multiplication"),
+    Tests<double, av_mul_unroll::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Unrolled multiplication"),
+    Tests<double, av_mul_manual::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Manual multiplication"),
+    Tests<double, av_mul_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("SSE multiplication"),
+    Tests<double, av_mul_avx::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("AVX multiplication")
 };
 
 void run_benchmarks(std::vector<BenchmarkWrapper<double>*> tasks, std::complex<double> *arr, std::size_t to_sum, std::complex<double> ref) {

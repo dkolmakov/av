@@ -47,7 +47,7 @@ $(BINDIR)/$(APP)_none: $(OBJECTS_NONE) $(HEADERS)
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 $(BINDIR)/$(APP)_sse: $(OBJECTS_SSE) $(HEADERS)
-	$(CXX) $(CXXFLAGS) -msse4.1 $(OBJECTS_SSE) -o $@
+	$(CXX) $(CXXFLAGS) -msse4.2 $(OBJECTS_SSE) -o $@
 
 $(BINDIR)/$(APP)_avx: $(OBJECTS_AVX) $(HEADERS)
 	$(CXX) $(CXXFLAGS) -mavx $(OBJECTS_AVX) -o $@
@@ -59,7 +59,7 @@ $(OBJDIR)/%.onone: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@ 
 
 $(OBJDIR)/%.osse: %.cpp
-	$(CXX) $(CXXFLAGS) -msse4.1 $(INCLUDES) -c $< -o $@ 
+	$(CXX) $(CXXFLAGS) -msse4.2 $(INCLUDES) -c $< -o $@ 
 
 $(OBJDIR)/%.oavx: %.cpp
 	$(CXX) $(CXXFLAGS) -mavx $(INCLUDES) -c $< -o $@ 
