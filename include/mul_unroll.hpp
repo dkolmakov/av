@@ -4,7 +4,7 @@
 
 #include "common.hpp"
 
-namespace av_mul_unroll {
+namespace mul_unroll {
     
 namespace implementation {
 

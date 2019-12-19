@@ -4,7 +4,7 @@
 
 #include "common.hpp"
 
-namespace av_unroll {
+namespace sum_unroll {
     
 namespace implementation {
 

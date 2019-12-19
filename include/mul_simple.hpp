@@ -4,7 +4,7 @@
 
 #include "common.hpp"
 
-namespace av_mul_simple {
+namespace mul_simple {
     
 namespace implementation {
 

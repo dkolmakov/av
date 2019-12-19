@@ -5,7 +5,7 @@
 
 #include "common.hpp"
 
-namespace av_mul_avx {
+namespace mul_avx {
     
 namespace implementation {
 
@@ -147,7 +147,7 @@ namespace implementation {
                 __m256d realB[chunk_size / 4];
                 __m256d imagB[chunk_size / 4];
                 
-                unpackB<T, chunk_size / 4 - 1>::unpack(realB, imagB, arr);
+                unpackB<T, chunk_size / 4 - 1>::unpack(realB, imagB, arr + i);
                 multiply<T, chunk_size / 4 - 1>::compute(realA, imagA, realB, imagB);
             }
             
@@ -159,6 +159,9 @@ namespace implementation {
     struct chunk_mul {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
             // Default implementation
+            for (std::size_t i = 0; i < chunk_size; i++)
+                acc[i] = 1;
+            
             std::complex<T> res(1,0);
             for (std::size_t i = 0; i < count; i++) {
                 res *= arr[i];

@@ -4,7 +4,7 @@
 
 #include "common.hpp"
 
-namespace av_simple {
+namespace sum_simple {
     
 namespace implementation {
 

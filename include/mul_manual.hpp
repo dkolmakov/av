@@ -5,7 +5,7 @@
 
 #include "common.hpp"
 
-namespace av_mul_manual {
+namespace mul_manual {
     
 namespace implementation {
 

@@ -5,7 +5,7 @@
 
 #include "common.hpp"
 
-namespace av_manual {
+namespace sum_manual {
     
 namespace implementation {
 

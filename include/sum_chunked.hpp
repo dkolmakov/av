@@ -4,7 +4,7 @@
 
 #include "common.hpp"
 
-namespace av_chunked {
+namespace sum_chunked {
     
 namespace implementation {
 

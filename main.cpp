@@ -33,23 +33,23 @@
 // #define CHUNKS_NUM 1
 
 std::vector<BenchmarkWrapper<double>*> sum_tasks = {
-    Tests<double, av_simple::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Simple summation"),
-    Tests<double, av_unroll::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Unrolled summation"),
-    Tests<double, av_chunked::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Chunked summation"),
-    Tests<double, sum_man_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("SSE summation\t"),
-    Tests<double, sum_adv_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Advanced SSE summation"),
+    Tests<double, sum_simple::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_simple"),
+    Tests<double, sum_unroll::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_unroll"),
+    Tests<double, sum_chunked::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_chunked"),
+    Tests<double, sum_man_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_man_sse"),
+    Tests<double, sum_adv_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_adv_sse"),
 };
 
 std::vector<BenchmarkWrapper<double>*> mul_tasks = {
-    Tests<double, av_mul_simple::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Simple multiplication"),
-    Tests<double, av_mul_unroll::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Unrolled multiplication"),
-    Tests<double, av_mul_manual::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("Manual multiplication"),
-    Tests<double, av_mul_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("SSE multiplication"),
-    Tests<double, av_mul_avx::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("AVX multiplication")
+    Tests<double, mul_simple::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_simple"),
+    Tests<double, mul_unroll::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_unroll"),
+    Tests<double, mul_manual::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_manual"),
+    Tests<double, mul_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_sse\t"),
+    Tests<double, mul_avx::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_avx\t")
 };
 
 void run_benchmarks(std::vector<BenchmarkWrapper<double>*> tasks, std::complex<double> *arr, std::size_t to_sum, const std::complex<double> ref) {
-    std::cout << "\t\t\t";
+    std::cout << "\t";
     for (auto& bench : tasks[0]->benchmarks)
         std::cout << "\t\t" << bench.param;
     std::cout << std::endl;
@@ -80,9 +80,9 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < to_sum; i++) {
         arr_to_sum[i] = i;
     }
-    std::complex<double> sum = av_simple::sum(arr_to_sum, to_sum);
+    std::complex<double> sum = sum_simple::sum(arr_to_sum, to_sum);
 
-    std::cout << std::endl << std::endl << "Starting sum tests for: " << av::inst_set << " instruction set" << std::endl;
+    std::cout << "Summation: " << av::inst_set << " instruction set" << std::endl;
     run_benchmarks(sum_tasks, arr_to_sum, to_sum, sum);
 
     std::complex<double> *arr_to_mul = new std::complex<double>[to_sum];
@@ -92,11 +92,9 @@ int main(int argc, char **argv) {
             arr_to_mul[i] = 1 + i / (size_t)(0.1 * to_sum);
         }
     }
-    std::complex<double> mul = av_mul_simple::mul(arr_to_mul, to_sum);
+    std::complex<double> mul = mul_simple::mul(arr_to_mul, to_sum);
 
-    std::cout << mul << std::endl;
-    
-    std::cout << std::endl << std::endl << "Starting mul tests for: " << av::inst_set << " instruction set" << std::endl;
+    std::cout << "Multiplication: " << av::inst_set << " instruction set" << std::endl;
     run_benchmarks(mul_tasks, arr_to_mul, to_sum, mul);
    
     return 0;

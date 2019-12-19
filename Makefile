@@ -34,7 +34,7 @@ MUL_UNROLL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/mul_unroll,$(BINARIES))
 MUL_MANUAL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/mul_man,$(BINARIES))
 MUL_ADVANCED_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/mul_adv,$(BINARIES))
 
-all: $(OBJDIR) $(BINDIR) $(BINARIES) asm
+all: $(OBJDIR) $(BINDIR) $(BINARIES)
 
 clean:
 	@rm -rvf $(OBJDIR)/* $(LOGDIR)/* $(BINARIES) $(TEMPSRC) $(OBJECTS_TEMP) $(TEMPBIN)

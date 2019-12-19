@@ -5,7 +5,7 @@
 
 #include "common.hpp"
 
-namespace av_mul_sse {
+namespace mul_sse {
     
 namespace implementation {
 
