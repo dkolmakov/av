@@ -131,7 +131,7 @@ namespace implementation {
                 __m128d realB[chunk_size / 2];
                 __m128d imagB[chunk_size / 2];
                 
-                unpackB<T, chunk_size / 2 - 1>::unpack(realB, imagB, arr);
+                unpackB<T, chunk_size / 2 - 1>::unpack(realB, imagB, arr + i);
                 summation<T, chunk_size / 2 - 1>::compute(realA, imagA, realB, imagB);
             }
             

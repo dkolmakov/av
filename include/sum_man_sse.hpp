@@ -15,16 +15,14 @@ namespace implementation {
     template <class T>
     struct init<T, 0> {
         static force_inline void doIt(__m128d *acc) {
-            acc[2 * 0] = _mm_setr_pd(0, 0);
-            acc[2 * 0 + 1] = _mm_setr_pd(0, 0);
+            acc[0] = _mm_setr_pd(0, 0);
         }
     };
 
     template <class T, std::size_t index>
     struct init {
         static force_inline void doIt(__m128d *acc) {
-            acc[2 * index] = _mm_setr_pd(0, 0);
-            acc[2 * index + 1] = _mm_setr_pd(0, 0);
+            acc[index] = _mm_setr_pd(0, 0);
             init<T, index - 1>::doIt(acc);
         }
     };
@@ -35,16 +33,14 @@ namespace implementation {
     template <class T>
     struct unpack<T, 0> {
         static force_inline void doIt(__m128d *vals, std::complex<T> *arr) {
-            vals[2 * 0] = _mm_loadu_pd((double*)(arr + 2 * 0));
-            vals[2 * 0 + 1] = _mm_loadu_pd((double*)(arr + 2 * 0 + 1));
+            vals[0] = _mm_loadu_pd((double*)(arr + 0));
         }
     };
 
     template <class T, std::size_t index>
     struct unpack {
         static force_inline void doIt(__m128d *vals, std::complex<T> *arr) {
-            vals[2 * index] = _mm_loadu_pd((double*)(arr + 2 * index));
-            vals[2 * index + 1] = _mm_loadu_pd((double*)(arr + 2 * index + 1));
+            vals[index] = _mm_loadu_pd((double*)(arr + index));
             unpack<T, index - 1>::doIt(vals, arr);
         }
     };
@@ -55,16 +51,14 @@ namespace implementation {
     template <class T>
     struct summation<T, 0> {
         static force_inline void doIt(__m128d *acc, __m128d *vals) {
-            acc[2 * 0] = _mm_add_pd(acc[2 * 0], vals[2 * 0]);
-            acc[2 * 0 + 1] = _mm_add_pd(acc[2 * 0 + 1], vals[2 * 0 + 1]);
+            acc[0] = _mm_add_pd(acc[0], vals[0]);
         }
     };
     
     template <class T, std::size_t index>
     struct summation {
         static force_inline void doIt(__m128d *acc, __m128d *vals) {
-            acc[2 * index] = _mm_add_pd(acc[2 * index], vals[2 * index]);
-            acc[2 * index + 1] = _mm_add_pd(acc[2 * index + 1], vals[2 * index + 1]);
+            acc[index] = _mm_add_pd(acc[index], vals[index]);
 
             summation<T, index - 1>::doIt(acc, vals);
         }
@@ -76,16 +70,14 @@ namespace implementation {
     template <class T>
     struct pack<T, 0> {
         static force_inline void doIt(std::complex<T> *dst, __m128d *acc) {
-            _mm_storeu_pd((double*)(dst + 2 * 0), acc[2 * 0]);
-            _mm_storeu_pd((double*)(dst + 2 * 0 + 1), acc[2 * 0 + 1]);
+            _mm_storeu_pd((double*)(dst +  0), acc[0]);
         }
     };
 
     template <class T, std::size_t index>
     struct pack {
         static force_inline void doIt(std::complex<T> *dst, __m128d *acc) {
-            _mm_storeu_pd((double*)(dst + 2 * index), acc[2 * index]);
-            _mm_storeu_pd((double*)(dst + 2 * index + 1), acc[2 * index + 1]);
+            _mm_storeu_pd((double*)(dst + index), acc[index]);
             pack<T, index - 1>::doIt(dst, acc);
         }
     };
@@ -97,17 +89,17 @@ namespace implementation {
     template <class T, std::size_t chunk_size>
     struct chunk_sum<T, chunk_size, 0> {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            __m128d dataA[chunk_size / 2];
-            init<T, chunk_size / 2 - 1>::doIt(dataA);
+            __m128d dataA[chunk_size];
+            unpack<T, chunk_size - 1>::doIt(dataA, arr);
             
-            for (std::size_t i = 0; i < count; i += chunk_size) {
-                __m128d dataB[chunk_size / 2];
+            for (std::size_t i = chunk_size; i < count; i += chunk_size) {
+                __m128d dataB[chunk_size];
                 
-                unpack<T, chunk_size / 2 - 1>::doIt(dataB, arr + i);
-                summation<T, chunk_size / 2 - 1>::doIt(dataA, dataB);
+                unpack<T, chunk_size - 1>::doIt(dataB, arr + i);
+                summation<T, chunk_size - 1>::doIt(dataA, dataB);
             }
 
-            pack<T, chunk_size / 2 - 1>::doIt(acc, dataA);
+            pack<T, chunk_size - 1>::doIt(acc, dataA);
         }
     };
 

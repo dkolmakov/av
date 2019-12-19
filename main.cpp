@@ -48,7 +48,7 @@ std::vector<BenchmarkWrapper<double>*> mul_tasks = {
     Tests<double, av_mul_avx::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("AVX multiplication")
 };
 
-void run_benchmarks(std::vector<BenchmarkWrapper<double>*> tasks, std::complex<double> *arr, std::size_t to_sum, std::complex<double> ref) {
+void run_benchmarks(std::vector<BenchmarkWrapper<double>*> tasks, std::complex<double> *arr, std::size_t to_sum, const std::complex<double> ref) {
     std::cout << "\t\t\t";
     for (auto& bench : tasks[0]->benchmarks)
         std::cout << "\t\t" << bench.param;
@@ -64,7 +64,7 @@ void run_benchmarks(std::vector<BenchmarkWrapper<double>*> tasks, std::complex<d
             std::complex<double> result = bench.tf(arr, to_sum);
             size_t elapsed = t.elapsed();
                 
-            printf("\t%lu (%0.2f)", elapsed, abs(result - ref));
+            printf("\t%lu (%d)", elapsed, abs(result - ref) < 1e-6);
         }
         std::cout << std::endl;
     }
@@ -75,19 +75,29 @@ int main(int argc, char **argv) {
         return 1;
     
     std::size_t to_sum = atoi(argv[1]);
-    std::complex<double> *arr = new std::complex<double>[to_sum];
-    
-    for (size_t i = 0; i < to_sum; i++) {
-        arr[i] = 1.000001;
-    }
-        
-    std::complex<double> sum = av_simple::sum(arr, to_sum);
-    std::complex<double> mul = av_mul_simple::mul(arr, to_sum);
 
-    std::cout << std::endl << std::endl << "Starting tests for: " << av::inst_set << " instruction set" << std::endl;
+    std::complex<double> *arr_to_sum = new std::complex<double>[to_sum];
+    for (size_t i = 0; i < to_sum; i++) {
+        arr_to_sum[i] = i;
+    }
+    std::complex<double> sum = av_simple::sum(arr_to_sum, to_sum);
+
+    std::cout << std::endl << std::endl << "Starting sum tests for: " << av::inst_set << " instruction set" << std::endl;
+    run_benchmarks(sum_tasks, arr_to_sum, to_sum, sum);
+
+    std::complex<double> *arr_to_mul = new std::complex<double>[to_sum];
+    for (size_t i = 0; i < to_sum; i++) {
+        arr_to_mul[i] = 1;
+        if ((i % (size_t)(0.1 * to_sum)) == 0) {
+            arr_to_mul[i] = 1 + i / (size_t)(0.1 * to_sum);
+        }
+    }
+    std::complex<double> mul = av_mul_simple::mul(arr_to_mul, to_sum);
+
+    std::cout << mul << std::endl;
     
-    run_benchmarks(sum_tasks, arr, to_sum, sum);
-    run_benchmarks(mul_tasks, arr, to_sum, mul);
+    std::cout << std::endl << std::endl << "Starting mul tests for: " << av::inst_set << " instruction set" << std::endl;
+    run_benchmarks(mul_tasks, arr_to_mul, to_sum, mul);
    
     return 0;
 }
