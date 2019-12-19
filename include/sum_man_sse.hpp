@@ -159,11 +159,9 @@ namespace implementation {
             // Default implementation
             std::complex<T> result(0,0);
             
-            asm volatile ("nop;nop;nop;");
             for (std::size_t i = 0; i < count; i++) {
                 result += arr[i];
             }
-            asm volatile ("nop;nop;nop;");
             
             return result;
         }

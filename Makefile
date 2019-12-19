@@ -9,7 +9,7 @@ OBJDIR=./obj
 BINDIR=./bin
 LOGDIR=./log
 
-SOURCES := $(wildcard *.cpp)
+SOURCES := main.cpp
 HEADERS := $(wildcard include/*.hpp)
 
 OBJECTS_NONE := $(OBJDIR)/$(SOURCES:.cpp=.onone)
@@ -18,6 +18,11 @@ OBJECTS_AVX := $(OBJDIR)/$(SOURCES:.cpp=.oavx)
 OBJECTS_AVX512 := $(OBJDIR)/$(SOURCES:.cpp=.oavx512)
 
 BINARIES := $(BINDIR)/$(APP)_none $(BINDIR)/$(APP)_sse $(BINDIR)/$(APP)_avx $(BINDIR)/$(APP)_avx512 
+
+TEMPSRC := temp.cpp
+OBJECTS_TEMP := $(OBJDIR)/$(TEMPSRC:.cpp=.o)
+TEMPBIN := $(BINDIR)/$(APP)_temp
+ASMDEST := $(LOGDIR)/asm_output
 
 SUM_SIMPLE_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/sum_simple,$(BINARIES))
 SUM_UNROLL_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/sum_unroll,$(BINARIES))
@@ -32,7 +37,7 @@ MUL_ADVANCED_ASM := $(subst $(BINDIR)/$(APP),$(LOGDIR)/mul_adv,$(BINARIES))
 all: $(OBJDIR) $(BINDIR) $(BINARIES) asm
 
 clean:
-	@rm -rvf $(OBJDIR)/* $(LOGDIR)/* $(BINARIES)
+	@rm -rvf $(OBJDIR)/* $(LOGDIR)/* $(BINARIES) $(TEMPSRC) $(OBJECTS_TEMP) $(TEMPBIN)
 	
 $(BINDIR):
 	mkdir -p bin
@@ -67,32 +72,19 @@ $(OBJDIR)/%.oavx: %.cpp
 $(OBJDIR)/%.oavx512: %.cpp
 	$(CXX) $(CXXFLAGS) -mavx512f $(INCLUDES) -c $< -o $@ 
 
+$(TEMPSRC):
+	./gen_temp.sh $(NAMESPACE) $(CHUNK)
 	
-$(LOGDIR)/sum_simple%: $(BINDIR)/$(APP)%
-	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$2}' > $@
+$(TEMPBIN): $(OBJECTS_TEMP) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $< -o $@
 
-$(LOGDIR)/sum_unroll%: $(BINDIR)/$(APP)%
-	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$4}' > $@
+$(OBJECTS_TEMP): $(TEMPSRC)
+	$(CXX) $(CXXFLAGS) $(ARCH) $(INCLUDES) -c $< -o $@
 
-$(LOGDIR)/sum_chunked%: $(BINDIR)/$(APP)%
-	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$6}' > $@
+$(ASMDEST): $(TEMPBIN)
+	objdump -d $< | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$2}' > $@
 	
-$(LOGDIR)/sum_man%: $(BINDIR)/$(APP)%
-	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$8}' > $@
-	
-$(LOGDIR)/mul_simple%: $(BINDIR)/$(APP)%
-	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$10}' > $@
-
-$(LOGDIR)/mul_unroll%: $(BINDIR)/$(APP)%
-	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$12}' > $@
-
-$(LOGDIR)/mul_man%: $(BINDIR)/$(APP)%
-	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$14}' > $@
-
-$(LOGDIR)/mul_adv%: $(BINDIR)/$(APP)%
-	objdump -d $< | awk -v RS= '/<main>/' | awk -v RS="" -F '[ \t]+[a-z0-9]+:[ \t]+90[ \t]*nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop\n[ \t]+[a-z0-9]+:[ \t]+90[ \t]+nop' '{print $$16}' > $@
-	
-asm: $(LOGDIR) $(SUM_SIMPLE_ASM) $(SUM_UNROLL_ASM) $(SUM_CHUNKED_ASM) $(SUM_MANUAL_ASM) $(MUL_SIMPLE_ASM) $(MUL_UNROLL_ASM) $(MUL_MANUAL_ASM) $(MUL_ADVANCED_ASM)
+asm: $(ASMDEST)
 
 	
 
