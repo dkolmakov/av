@@ -16,7 +16,7 @@
 
 #include "mul_simple.hpp"
 #include "mul_unroll.hpp"
-#include "mul_manual.hpp"
+#include "mul_old_sse.hpp"
 #include "mul_avx.hpp"
 #include "mul_sse.hpp"
 
@@ -43,7 +43,7 @@ std::vector<BenchmarkWrapper<double>*> sum_tasks = {
 std::vector<BenchmarkWrapper<double>*> mul_tasks = {
     Tests<double, mul_simple::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_simple"),
     Tests<double, mul_unroll::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_unroll"),
-    Tests<double, mul_manual::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_manual"),
+    Tests<double, mul_old_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_old_sse"),
     Tests<double, mul_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_sse\t"),
     Tests<double, mul_avx::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_avx\t")
 };
