@@ -5,17 +5,128 @@
 
 #include "common.hpp"
 
-namespace mul_manual {
+namespace mul_old_avx {
     
 namespace implementation {
 
-    template <class T, std::size_t chunk_size>
-    struct chunk_mul;
+    template <class T, std::size_t index>
+    struct unpack;
 
     template <class T>
-    struct chunk_mul<T, 0> {
+    struct unpack<T, 0> {
+        static force_inline void doIt(__m256d *vals, std::complex<T> *arr) {
+            vals[0] = _mm256_loadu_pd((double*)(arr + 0));
+        }
+    };
+
+    template <class T, std::size_t index>
+    struct unpack {
+        static force_inline void doIt(__m256d *vals, std::complex<T> *arr) {
+            vals[index] = _mm256_loadu_pd((double*)(arr + 2 * index));
+            unpack<T, index - 1>::doIt(vals, arr);
+        }
+    };
+
+    template <class T, std::size_t index>
+    struct multiply;
+    
+    template <class T>
+    struct multiply<T, 0> {
+        static force_inline void doIt(__m256d *acc, __m256d *vals) {
+            /* Step 1: Multiply res and vec2 */
+            __m256d vec0 = _mm256_mul_pd(acc[0], vals[0]);
+
+            /* Step 2: Switch the real and imaginary elements of vec2 */
+            vals[0] = _mm256_permute_pd(vals[0], 0x5); 
+            
+            /* Step 3: Negate the imaginary elements of vec2 */
+                //  vec2 = _mm256_mul_pd(vec2, neg);       // this is much slower than XOR
+            // Flipping the sign bit in vec1 lets this run in parallel with the shuffle on vec2, reducing latency
+            //__m256d odd_signbits = _mm256_castsi256_pd( _mm256_setr_epi64x(0, 1ULL<<63, 0, 1ULL<<63));
+            __m256d odd_signbits = _mm256_setr_pd(0, -0.0, 0, -0.0);
+            acc[0] = _mm256_xor_pd(acc[0], odd_signbits);
+            
+            /* Step 4: Multiply vec1 and the modified vec2 */
+            __m256d vec1 = _mm256_mul_pd(acc[0], vals[0]);
+
+            /* Horizontally subtract the elements in vec3 and vec4 */
+            acc[0] = _mm256_hsub_pd(vec0, vec1);
+        }
+    };
+    
+    // Original version id from https://www.codeproject.com/Articles/874396/Crunching-Numbers-with-AVX-and-AVX
+    // And improved one is here https://stackoverflow.com/questions/39509746/how-to-square-two-complex-doubles-with-256-bit-avx-vectors
+
+    template <class T, std::size_t index>
+    struct multiply {
+        static force_inline void doIt(__m256d *acc, __m256d *vals) {
+            /* Step 1: Multiply res and vec2 */
+            __m256d vec0 = _mm256_mul_pd(acc[index], vals[index]);
+
+            /* Step 2: Switch the real and imaginary elements of vec2 */
+            vals[index] = _mm256_permute_pd(vals[index], 0x5); 
+            
+            /* Step 3: Negate the imaginary elements of vec2 */
+                //  vec2 = _mm256_mul_pd(vec2, neg);       // this is much slower than XOR
+            // Flipping the sign bit in vec1 lets this run in parallel with the shuffle on vec2, reducing latency
+            //__m256d odd_signbits = _mm256_castsi256_pd( _mm256_setr_epi64x(0, 1ULL<<63, 0, 1ULL<<63));
+            __m256d odd_signbits = _mm256_setr_pd(0, -0.0, 0, -0.0);
+            acc[index] = _mm256_xor_pd(acc[index], odd_signbits);
+            
+            /* Step 4: Multiply vec1 and the modified vec2 */
+            __m256d vec1 = _mm256_mul_pd(acc[index], vals[index]);
+
+            /* Horizontally subtract the elements in vec3 and vec4 */
+            acc[index] = _mm256_hsub_pd(vec0, vec1);
+
+            multiply<T, index - 1>::doIt(acc, vals);
+        }
+    };
+    
+    template <class T, std::size_t index>
+    struct pack;
+
+    template <class T>
+    struct pack<T, 0> {
+        static force_inline void doIt(std::complex<T> *dst, __m256d *acc) {
+            _mm256_storeu_pd((double*)(dst + 2 * 0), acc[0]);
+        }
+    };
+
+    template <class T, std::size_t index>
+    struct pack {
+        static force_inline void doIt(std::complex<T> *dst, __m256d *acc) {
+            _mm256_storeu_pd((double*)(dst + 2 * index), acc[index]);
+            pack<T, index - 1>::doIt(dst, acc);
+        }
+    };
+    
+    template <class T, std::size_t chunk_size, std::size_t parity_checker>
+    struct chunk_mul;
+    
+    template <class T, std::size_t chunk_size>
+    struct chunk_mul<T, chunk_size, 0> {
+        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
+            __m256d res[chunk_size / 2];
+            unpack<T, chunk_size / 2 - 1>::doIt(res, arr);
+            
+            for (std::size_t i = chunk_size; i < count; i += chunk_size) {
+                __m256d v0[chunk_size / 2];
+                unpack<T, chunk_size / 2 - 1>::doIt(v0, arr + i);
+                multiply<T, chunk_size / 2 - 1>::doIt(res, v0);
+            }
+            
+            pack<T, chunk_size / 2 - 1>::doIt(acc, res);
+        }
+    };
+    
+    template <class T, std::size_t chunk_size, std::size_t parity_checker>
+    struct chunk_mul {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
             // Default implementation
+            for (std::size_t i = 0; i < chunk_size; i++)
+                acc[i] = 1;
+            
             std::complex<T> res(1,0);
             for (std::size_t i = 0; i < count; i++) {
                 res *= arr[i];
@@ -24,101 +135,19 @@ namespace implementation {
         }
     };
     
-    template <class T>
-    struct chunk_mul<T, 1> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            __m128d res = _mm_load_pd(reinterpret_cast<double *>(arr));
-            
-            for (std::size_t i = 1; i < count; i += 1) {
-                // Original version id from https://www.codeproject.com/Articles/874396/Crunching-Numbers-with-AVX-and-AVX
-                // And improved one is here https://stackoverflow.com/questions/39509746/how-to-square-two-complex-doubles-with-256-bit-avx-vectors
-                __m128d v0 = _mm_loadu_pd(reinterpret_cast<double *>(arr + i));
-                
-                __m128d tmp0 = _mm_mul_pd(res, v0);
-                v0 = _mm_shuffle_pd(v0, v0, 1);
-                
-                __m128d odd_signbits = _mm_setr_pd(0, -0.0);
-                res = _mm_xor_pd(res, odd_signbits);
-                
-                __m128d tmp1 = _mm_mul_pd(res, v0);
-                
-                res = _mm_addsub_pd(tmp0, tmp1);
-            }
-            
-            _mm_store_pd(reinterpret_cast<double *>(acc), res);
-        }
-    };
-
-    template <class T>
-    struct chunk_mul<T, 2> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            __m256d res = _mm256_setr_pd(1.0, 0, 1.0, 0);
-            
-            for (std::size_t i = 0; i < count; i += 2) {
-                __m256d vec2 = _mm256_loadu_pd(reinterpret_cast<double *>(arr + i));
-                
-                /* Step 1: Multiply res and vec2 */
-                __m256d vec3 = _mm256_mul_pd(res, vec2);
-
-                /* Step 2: Switch the real and imaginary elements of vec2 */
-                vec2 = _mm256_permute_pd(vec2, 0x5);    // gcc turns this into the slower lane-crossing VPERMPD, not VPERMILPD, but clang is ok.
-                
-                /* Step 3: Negate the imaginary elements of vec2 */
-                    //  vec2 = _mm256_mul_pd(vec2, neg);       // this is much slower than XOR
-                // Flipping the sign bit in vec1 lets this run in parallel with the shuffle on vec2, reducing latency
-                //__m256d odd_signbits = _mm256_castsi256_pd( _mm256_setr_epi64x(0, 1ULL<<63, 0, 1ULL<<63));
-                __m256d odd_signbits = _mm256_setr_pd(0, -0.0, 0, -0.0);
-                res = _mm256_xor_pd(res, odd_signbits);
-                
-                /* Step 4: Multiply vec1 and the modified vec2 */
-                __m256d vec4 = _mm256_mul_pd(res, vec2);
-
-                /* Horizontally subtract the elements in vec3 and vec4 */
-                res = _mm256_hsub_pd(vec3, vec4);
-            }
-            
-            _mm256_storeu_pd((double*) acc, res);
-        }
-    };
-
-    template <class T>
-    struct chunk_mul<T, 4> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            std::cout << "No solution for AVX512 yet" << std::endl;
-            chunk_mul<T, 0>::compute(acc, arr, count);
-            acc[1] = {1,0};
-            acc[2] = {1,0};
-            acc[3] = {1,0};
-        }
-    };
-
-    template <class T, std::size_t chunk_size = av::SIMD_REG_SIZE / sizeof(T) / 2>
+    template <class T, std::size_t chunk_size, std::size_t reg_size = av::SIMD_REG_SIZE>
     struct mul;
     
-    template <class T>
-    struct mul<T, 0> {
-        static force_inline std::complex<T> compute(std::complex<T> *arr, const std::size_t count) {
-            // Default implementation
-            std::complex<T> acc(1,0);
-            
-            asm volatile ("nop;nop;nop;");
-            chunk_mul<T, 0>::compute(&acc, arr, count);
-            asm volatile ("nop;nop;nop;");
-            
-            return acc;
-        }
-    };
-    
     template <class T, std::size_t chunk_size>
-    struct mul {
-        static force_inline std::complex<T> compute(std::complex<T> *arr, std::size_t count) {
+    struct mul<T, chunk_size, 32> {
+        static force_inline std::complex<T> compute(std::complex<T> *arr, const std::size_t count) {
             // Specialized implementation
             std::complex<T> acc[chunk_size];
             std::size_t to_mul = count - count % chunk_size;
             
             // Sum by chunks
             asm volatile ("nop;nop;nop;");
-            chunk_mul<T, chunk_size>::compute(acc, arr, to_mul);
+            chunk_mul<T, chunk_size, chunk_size % 2>::compute(acc, arr, to_mul);
             asm volatile ("nop;nop;nop;");
 
             std::size_t i = to_mul;
@@ -137,17 +166,27 @@ namespace implementation {
         }
     };
     
+    template <class T, std::size_t chunk_size, std::size_t reg_size>
+    struct mul {
+        static force_inline std::complex<T> compute(std::complex<T> *arr, std::size_t count) {
+            // Default implementation
+            std::complex<T> res(1,0);
+            chunk_mul<T, 1, 1>::compute(&res, arr, count);
+            return res;
+        }
+    };
+    
 }
 
-    template<class T>
+    template<class T, std::size_t chunk_size>
     static std::complex<T> mul(std::complex<T> *arr, std::size_t count) {
-        return implementation::mul<T>::compute(arr, count);
+        return implementation::mul<T, chunk_size>::compute(arr, count);
     }
 
     template<class T, std::size_t chunk_size>
     struct ToTest {
         static std::complex<T> to_test(std::complex<T> *arr, std::size_t count) {
-            return mul<T>(arr, count);
+            return mul<T, chunk_size>(arr, count);
         }
     };
     
