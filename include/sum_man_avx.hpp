@@ -9,86 +9,98 @@ namespace sum_man_avx {
     
 namespace implementation {
 
-    template <class T, std::size_t chunk_size>
+    template <class T, std::size_t index>
+    struct unpack;
+
+    template <class T>
+    struct unpack<T, 0> {
+        static force_inline void doIt(__m256d *vals, std::complex<T> *arr) {
+            vals[0] = _mm256_loadu_pd((double*)(arr + 0 * 2));
+        }
+    };
+
+    template <class T, std::size_t index>
+    struct unpack {
+        static force_inline void doIt(__m256d *vals, std::complex<T> *arr) {
+            vals[index] = _mm256_loadu_pd((double*)(arr + index * 2));
+            unpack<T, index - 1>::doIt(vals, arr);
+        }
+    };
+
+    template <class T, std::size_t index>
+    struct summation;
+    
+    template <class T>
+    struct summation<T, 0> {
+        static force_inline void doIt(__m256d *acc, __m256d *vals) {
+            acc[0] = _mm256_add_pd(acc[0], vals[0]);
+        }
+    };
+    
+    template <class T, std::size_t index>
+    struct summation {
+        static force_inline void doIt(__m256d *acc, __m256d *vals) {
+            acc[index] = _mm256_add_pd(acc[index], vals[index]);
+
+            summation<T, index - 1>::doIt(acc, vals);
+        }
+    };
+    
+    template <class T, std::size_t index>
+    struct pack;
+
+    template <class T>
+    struct pack<T, 0> {
+        static force_inline void doIt(std::complex<T> *dst, __m256d *acc) {
+            _mm256_storeu_pd((double*)(dst + 0 * 2), acc[0]);
+        }
+    };
+
+    template <class T, std::size_t index>
+    struct pack {
+        static force_inline void doIt(std::complex<T> *dst, __m256d *acc) {
+            _mm256_storeu_pd((double*)(dst + index * 2), acc[index]);
+            pack<T, index - 1>::doIt(dst, acc);
+        }
+    };
+
+    
+    template <class T, std::size_t chunk_size, std::size_t parity_checker>
     struct chunk_sum;
     
-    template <class T>
-    struct chunk_sum<T, 2> {
+    template <class T, std::size_t chunk_size>
+    struct chunk_sum<T, chunk_size, 0> {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            __m128d res = _mm_setr_pd(0, 0);
-            __m128d data0 = _mm_loadu_pd(reinterpret_cast<double *>(arr));
+            __m256d dataA[chunk_size];
+            unpack<T, chunk_size - 1>::doIt(dataA, arr);
             
-            for (std::size_t i = 1; i < count - 1; i += 2) {
-                __m128d data1 = _mm_loadu_pd(reinterpret_cast<double *>(arr + i));
-                res = _mm_add_pd(res, data0);
-                data0 = _mm_loadu_pd(reinterpret_cast<double *>(arr + i + 1));
-                res = _mm_add_pd(res, data1);
+            for (std::size_t i = chunk_size; i < count; i += chunk_size) {
+                __m256d dataB[chunk_size];
+                
+                unpack<T, chunk_size - 1>::doIt(dataB, arr + i);
+                summation<T, chunk_size - 1>::doIt(dataA, dataB);
             }
-            
-            res = _mm_add_pd(res, data0);
-            __m128d data1 = _mm_loadu_pd(reinterpret_cast<double *>(arr + count - 1));
-            res = _mm_add_pd(res, data1);
-            _mm_store_pd(reinterpret_cast<double *>(acc), res);
+
+            pack<T, chunk_size - 1>::doIt(acc, dataA);
         }
     };
 
-    template <class T>
-    struct chunk_sum<T, 4> {
+    template <class T, std::size_t chunk_size, std::size_t parity_checker>
+    struct chunk_sum {
         static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            __m256d res = _mm256_setr_pd(0, 0, 0, 0);
-            __m256d data0 = _mm256_loadu_pd(reinterpret_cast<double *>(arr));
-
-            for (std::size_t i = 2; i < count - 2; i += 4) {
-                __m256d data1 = _mm256_loadu_pd(reinterpret_cast<double *>(arr + i));
-                res = _mm256_add_pd(res, data0);
-                data0 = _mm256_loadu_pd(reinterpret_cast<double *>(arr + i + 2));
-                res = _mm256_add_pd(res, data1);
-            }
-            
-            res = _mm256_add_pd(res, data0);
-            __m256d data1 = _mm256_loadu_pd(reinterpret_cast<double *>(arr + count - 2));
-            res = _mm256_add_pd(res, data1);
-            _mm256_store_pd(reinterpret_cast<double *>(acc), res);
-        }
-    };
-
-    template <class T>
-    struct chunk_sum<T, 8> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr, std::size_t count) {
-            for (std::size_t i = 0; i < count; i += 4) {
-                acc[0] += arr[i];
-                acc[1] += arr[i + 1];
-                acc[2] += arr[i + 2];
-                acc[3] += arr[i + 3];
-                acc[4] += arr[i + 4];
-                acc[5] += arr[i + 5];
-                acc[6] += arr[i + 6];
-                acc[7] += arr[i + 7];
-            }
-        }
-    };
-
-    template <class T, std::size_t chunk_size = av::SIMD_REG_SIZE / sizeof(T) >
-    struct sum;
-    
-    template <class T>
-    struct sum<T, 0> {
-        static force_inline std::complex<T> compute(std::complex<T> *arr, const std::size_t count) {
-            // Default implementation
             std::complex<T> result(0,0);
-            
-            asm volatile ("nop;nop;nop;");
             for (std::size_t i = 0; i < count; i++) {
                 result += arr[i];
             }
-            asm volatile ("nop;nop;nop;");
-            
-            return result;
+            *acc = result;
         }
     };
+
+    template <class T, std::size_t chunk_size, std::size_t reg_size = av::SIMD_REG_SIZE >
+    struct sum;
     
     template <class T, std::size_t chunk_size>
-    struct sum {
+    struct sum<T, chunk_size, 32> {
         static force_inline std::complex<T> compute(std::complex<T> *arr, std::size_t count) {
             // Specialized implementation
             std::complex<T> acc[chunk_size];
@@ -96,7 +108,7 @@ namespace implementation {
             
             // Sum by chunks
             asm volatile ("nop;nop;nop;");
-            chunk_sum<T, chunk_size>::compute(acc, arr, to_sum);
+            chunk_sum<T, chunk_size, chunk_size % 2>::compute(acc, arr, to_sum);
             asm volatile ("nop;nop;nop;");
 
             std::size_t i = to_sum;
@@ -115,17 +127,31 @@ namespace implementation {
         }
     };
     
+    template <class T, std::size_t chunk_size, std::size_t reg_size>
+    struct sum {
+        static force_inline std::complex<T> compute(std::complex<T> *arr, const std::size_t count) {
+            // Default implementation
+            std::complex<T> result(0,0);
+            
+            for (std::size_t i = 0; i < count; i++) {
+                result += arr[i];
+            }
+            
+            return result;
+        }
+    };
+    
 }
 
-    template<class T>
+    template<class T, std::size_t chunk_size>
     static std::complex<T> sum(std::complex<T> *arr, std::size_t count) {
-        return implementation::sum<T>::compute(arr, count);
+        return implementation::sum<T, chunk_size>::compute(arr, count);
     }
 
     template<class T, std::size_t chunk_size>
     struct ToTest {
         static std::complex<T> to_test(std::complex<T> *arr, std::size_t count) {
-            return sum<T>(arr, count);
+            return sum<T, chunk_size>(arr, count);
         }
     };
     

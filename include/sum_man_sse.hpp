@@ -108,7 +108,7 @@ namespace implementation {
             
             // Sum by chunks
             asm volatile ("nop;nop;nop;");
-            chunk_sum<T, chunk_size, chunk_size % 2>::compute(acc, arr, to_sum);
+            chunk_sum<T, chunk_size, chunk_size % 1>::compute(acc, arr, to_sum);
             asm volatile ("nop;nop;nop;");
 
             std::size_t i = to_sum;
