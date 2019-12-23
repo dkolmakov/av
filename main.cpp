@@ -23,31 +23,23 @@
 
 #include "test_harness.hpp"
 
-// static constexpr std::size_t chunk_sizes[] = {1, 2, 4, 8, 16, 24, 32, 48, 64};
-// constexpr std::size_t chunks_num = sizeof(chunk_sizes) / sizeof(std::size_t);
-// constexpr std::array<std::size_t, 9> chunks_array = {1, 2, 4, 8, 16, 24, 32, 48, 64};
-
-#define CHUNKS 1, 2, 4, 8, 16, 24, 32, 48, 64
-#define CHUNKS_NUM 9
-
-// #define CHUNKS 16
-// #define CHUNKS_NUM 1
+typedef ChunkSizes<1, 2, 4, 8, 16, 24, 32, 48, 64> chunks;
 
 std::vector<BenchmarkWrapper<double>*> sum_tasks = {
-    Tests<double, sum_simple::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_simple"),
-    Tests<double, sum_unroll::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_unroll"),
-    Tests<double, sum_chunked::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_chunked"),
-    Tests<double, sum_man_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_man_sse"),
-    Tests<double, sum_man_avx::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("sum_man_avx"),
+    Tests<double, sum_simple::ToTest, chunks>::prepare_benchmarks("sum_simple"),
+    Tests<double, sum_unroll::ToTest, chunks>::prepare_benchmarks("sum_unroll"),
+    Tests<double, sum_chunked::ToTest, chunks>::prepare_benchmarks("sum_chunked"),
+    Tests<double, sum_man_sse::ToTest, chunks>::prepare_benchmarks("sum_man_sse"),
+    Tests<double, sum_man_avx::ToTest, chunks>::prepare_benchmarks("sum_man_avx"),
 };
 
 std::vector<BenchmarkWrapper<double>*> mul_tasks = {
-    Tests<double, mul_simple::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_simple"),
-    Tests<double, mul_unroll::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_unroll"),
-    Tests<double, mul_old_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_old_sse"),
-    Tests<double, mul_old_avx::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_old_avx"),
-    Tests<double, mul_sse::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_sse\t"),
-    Tests<double, mul_avx::ToTest, CHUNKS_NUM, CHUNKS>::prepare_benchmarks("mul_avx\t")
+    Tests<double, mul_simple::ToTest, chunks>::prepare_benchmarks("mul_simple"),
+    Tests<double, mul_unroll::ToTest, chunks>::prepare_benchmarks("mul_unroll"),
+    Tests<double, mul_old_sse::ToTest, chunks>::prepare_benchmarks("mul_old_sse"),
+    Tests<double, mul_old_avx::ToTest, chunks>::prepare_benchmarks("mul_old_avx"),
+    Tests<double, mul_sse::ToTest, chunks>::prepare_benchmarks("mul_sse\t"),
+    Tests<double, mul_avx::ToTest, chunks>::prepare_benchmarks("mul_avx\t")
 };
 
 void run_benchmarks(std::vector<BenchmarkWrapper<double>*> tasks, std::complex<double> *arr, std::size_t to_sum, const std::complex<double> ref) {

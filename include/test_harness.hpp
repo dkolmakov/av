@@ -18,6 +18,28 @@ private:
     std::chrono::time_point<clock_t> start;
 };
 
+template<std::size_t index, std::size_t test_val, std::size_t... test_vals>
+struct CountedChunkSizes {
+    typedef CountedChunkSizes<index + 1, test_vals...> next; 
+    static const std::size_t val = test_val;
+    static const std::size_t total = next::total;
+    static const bool last = false;
+};
+
+template<std::size_t index, std::size_t test_val>
+struct CountedChunkSizes<index, test_val> {
+    static const std::size_t val = test_val;
+    static const std::size_t total = index + 1;
+    static const bool last = true;
+};
+
+
+template<std::size_t... test_vals>
+struct ChunkSizes {
+    typedef CountedChunkSizes<0, test_vals...> next; 
+    static const std::size_t total = next::total;
+};
+
 
 template<class T>
 struct Benchmark {
@@ -40,30 +62,30 @@ struct BenchmarkWrapper {
   
 };
 
-template<class T, template<class TT, std::size_t size> class F, std::size_t index, std::size_t test_val, std::size_t... test_vals>
+template<class T, template<class TT, std::size_t size> class F, class test_vals, std::size_t index>
 struct GenBenchmark {
     static void gen(BenchmarkWrapper<T> *wrapper) {
-        wrapper->benchmarks[index].tf = F<T, test_val>::to_test;
-        wrapper->benchmarks[index].param = test_val;
-        GenBenchmark<T, F, index - 1, test_vals...>::gen(wrapper);
+        wrapper->benchmarks[index].tf = F<T, test_vals::val>::to_test;
+        wrapper->benchmarks[index].param = test_vals::val;
+        GenBenchmark<T, F, typename test_vals::next, index - 1>::gen(wrapper);
     }
 };
 
-template<class T, template<class TT, std::size_t size> class F, std::size_t index, std::size_t test_val>
-struct GenBenchmark<T, F, index, test_val> {
+template<class T, template<class TT, std::size_t size> class F, class test_vals>
+struct GenBenchmark<T, F, test_vals, 0> {
     static void gen(BenchmarkWrapper<T> *wrapper) {
-        wrapper->benchmarks[0].tf = F<T, test_val>::to_test;
-        wrapper->benchmarks[0].param = test_val;
+        wrapper->benchmarks[0].tf = F<T, test_vals::val>::to_test;
+        wrapper->benchmarks[0].param = test_vals::val;
     }
 };
 
 
-template<class T, template<class TT, std::size_t size> class F, std::size_t N, std::size_t... test_vals>
+template<class T, template<class TT, std::size_t size> class F, class test_vals>
 struct Tests {
     static BenchmarkWrapper<T> *prepare_benchmarks(std::string label) {
-        BenchmarkWrapper<T> *wrapper = new BenchmarkWrapper<T>(N, label);
+        BenchmarkWrapper<T> *wrapper = new BenchmarkWrapper<T>(test_vals::total, label);
         
-        GenBenchmark<T, F, N - 1, test_vals...>::gen(wrapper);
+        GenBenchmark<T, F, typename test_vals::next, test_vals::total - 1>::gen(wrapper);
         
         return wrapper;
     }
