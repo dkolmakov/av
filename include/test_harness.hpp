@@ -40,6 +40,37 @@ struct ChunkSizes {
     static const std::size_t total = next::total;
 };
 
+template<std::size_t index, template<class TT, std::size_t size> class test_kernel, template<class TT, std::size_t size> class ... test_kernels>
+struct CountedKernels {
+    typedef CountedKernels<index + 1, test_kernels...> next;
+
+    template<class T, std::size_t sz>
+    static std::complex<T> func(std::complex<T>* data, std::size_t size) {
+        return test_kernel<T, sz>::compute(data, size);
+    }
+
+    static const std::size_t total = next::total;
+    static const bool last = false;
+};
+
+template<std::size_t index, template<class TT, std::size_t sz> class test_kernel>
+struct CountedKernels<index, test_kernel> {
+    template<class T, std::size_t sz>
+    static std::complex<T> func(std::complex<T>* data, std::size_t size) {
+        return test_kernel<T, sz>::compute(data, size);
+    }
+    
+    static const std::size_t total = index + 1;
+    static const bool last = true;
+};
+
+
+template<template<class TT, std::size_t sz> class ... test_kernels>
+struct Kernels {
+    typedef CountedKernels<0, test_kernels...> next; 
+    static const std::size_t total = next::total;
+};
+
 
 template<class T>
 struct Benchmark {

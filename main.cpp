@@ -24,6 +24,11 @@
 #include "test_harness.hpp"
 
 typedef ChunkSizes<1, 2, 4, 8, 16, 24, 32, 48, 64> chunks;
+typedef Kernels<sum_simple::ToTest, 
+                sum_unroll::ToTest, 
+                sum_chunked::ToTest,
+                sum_man_sse::ToTest,
+                sum_man_avx::ToTest> sum_kernels;
 
 std::vector<BenchmarkWrapper<double>*> sum_tasks = {
     Tests<double, sum_simple::ToTest, chunks>::prepare_benchmarks("sum_simple"),
@@ -74,7 +79,7 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < to_sum; i++) {
         arr_to_sum[i] = i;
     }
-    std::complex<double> sum = sum_simple::sum(arr_to_sum, to_sum);
+    std::complex<double> sum = sum_simple::sum<double, 1>(arr_to_sum, to_sum);
 
     std::cout << "Summation: " << av::inst_set << " instruction set" << std::endl;
     run_benchmarks(sum_tasks, arr_to_sum, to_sum, sum);
