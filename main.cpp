@@ -26,7 +26,7 @@
 
 #include "test_harness.hpp"
 
-typedef ChunkSizes<1, 2, 4, 8, 16, 24, 32, 48, 64> chunks;
+typedef KernelParameters<1, 2, 4, 8, 16, 24, 32, 48, 64> chunk_sizes;
 typedef Kernels<array_sum::sum,
                 sum_simple::chunk_sum, 
                 sum_unroll::chunk_sum, 
@@ -34,7 +34,7 @@ typedef Kernels<array_sum::sum,
                 sum_man_sse::chunk_sum,
                 sum_man_avx::chunk_sum> sum_kernels;
 
-std::vector<BenchmarkWrapper<double>*>* sum_tasks = Tests<double, sum_kernels, chunks>::prepare_benchmarks();                
+Benchmark<double>* array_sum_benchmark = TestHarness<double, sum_kernels, chunk_sizes>::prepare_benchmark("array_sum");                
 
 // std::vector<BenchmarkWrapper<double>*> sum_tasks = {
 //     Tests<double, sum_simple::ToTest, chunks>::prepare_benchmarks("sum_simple"),
@@ -53,20 +53,19 @@ std::vector<BenchmarkWrapper<double>*>* sum_tasks = Tests<double, sum_kernels, c
 //     Tests<double, mul_avx::ToTest, chunks>::prepare_benchmarks("mul_avx\t")
 // };
 
-void run_benchmarks(std::vector<BenchmarkWrapper<double>*>* tasks, std::complex<double> *arr, std::size_t to_sum, const std::complex<double> ref) {
-    std::cout << "\t";
-    for (auto& bench : tasks->at(0)->benchmarks)
-        std::cout << "\t\t" << bench.param;
+void run_benchmarks(Benchmark<double>* benchmark, std::complex<double> *arr, std::size_t to_sum, const std::complex<double> ref) {
+    std::cout << benchmark->label;
+    for (auto& test_function : benchmark->kernel_tests[0]->tests)
+        std::cout << "\t\t" << test_function.param;
     std::cout << std::endl;
     
     Timer t;
-    for (auto task : *tasks) {
-        std::cout << task->label << "\t";
-        for (std::size_t i = 0; i < task->size; i++) {
-            auto& bench = task->benchmarks[i];
-            
+    for (auto kernel_test : benchmark->kernel_tests) {
+        std::cout << kernel_test->label << "\t";
+        
+        for (auto& test_function : kernel_test->tests) {
             t.reset();
-            std::complex<double> result = bench.tf(arr, to_sum);
+            std::complex<double> result = test_function.tf(arr, to_sum);
             size_t elapsed = t.elapsed();
                 
             printf("\t%lu (%d)", elapsed, abs(result - ref) < 1e-6);
@@ -88,7 +87,7 @@ int main(int argc, char **argv) {
     std::complex<double> sum = sum_simple::sum<double, 1>(arr_to_sum, to_sum);
 
     std::cout << "Summation: " << av::inst_set << " instruction set" << std::endl;
-    run_benchmarks(sum_tasks, arr_to_sum, to_sum, sum);
+    run_benchmarks(array_sum_benchmark, arr_to_sum, to_sum, sum);
 
 //     std::complex<double> *arr_to_mul = new std::complex<double>[to_sum];
 //     for (size_t i = 0; i < to_sum; i++) {
