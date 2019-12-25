@@ -6,15 +6,21 @@
 
 namespace sum_simple {
     
-    template <class T, std::size_t chunk_size>
     struct chunk_sum {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-            for (std::size_t i = 0; i < chunk_size; i++) {
-                acc[i] += arr[i];
-            }
+        static std::string get_label() {
+            return "sum_simple";
         }
+        
+        template <class T, std::size_t chunk_size>
+        struct core {
+            static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
+                for (std::size_t i = 0; i < chunk_size; i++) {
+                    acc[i] += arr[i];
+                }
+            }
+        };
     };
-
+    
     template<class T, std::size_t chunk_size>
     static std::complex<T> sum(std::complex<T> *arr, std::size_t count) {
         std::complex<T> acc[chunk_size];
@@ -26,7 +32,7 @@ namespace sum_simple {
         // Sum by chunks
         asm volatile ("nop;nop;nop;");
         for (std::size_t i = 0; i < to_sum; i += chunk_size) {
-            chunk_sum<T, chunk_size>::compute(acc, arr + i);
+            chunk_sum::core<T, chunk_size>::compute(acc, arr + i);
         }
         asm volatile ("nop;nop;nop;");
         
