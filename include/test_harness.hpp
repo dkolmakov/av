@@ -141,17 +141,42 @@ struct GenKernelTests<T, test_func, kernel, params, 0> {
 };
 
 
-template<class T,
-         template<typename, std::size_t, template<typename, std::size_t> class chunk_op> class test_func,
-         class kernels, class params>
+template<class T, class test_func, class kernels, class params>
 struct TestHarness {
+    
     static Benchmark<T>* prepare_benchmark(std::string label) {
         Benchmark<T>* bench = new Benchmark<T>(kernels::total, label);
 
-        GenKernelTests<T, test_func, typename kernels::next, params, kernels::total - 1>::gen(bench);
+        GenKernelTests<T, test_func::template core, typename kernels::next, params, kernels::total - 1>::gen(bench);
 
         return bench;
     }
+    
+    static void run_benchmark(Benchmark<T>* benchmark, std::size_t count) {
+        typename test_func::template input_data<T> input(count);
+        
+        const std::complex<T> ref = input.get_reference();
+        
+        std::cout << benchmark->label;
+        for (auto& test_function : benchmark->kernel_tests[0]->tests)
+            std::cout << "\t\t" << test_function.param;
+        std::cout << std::endl;
+        
+        Timer t;
+        for (auto kernel_test : benchmark->kernel_tests) {
+            std::cout << kernel_test->label << "\t";
+            
+            for (auto& test_function : kernel_test->tests) {
+                t.reset();
+                std::complex<T> result = test_function.tf(input.arr.data(), input.arr.size());
+                size_t elapsed = t.elapsed();
+                    
+                printf("\t%lu (%d)", elapsed, abs(result - ref) < 1e-6);
+            }
+            std::cout << std::endl;
+        }
+    }
+    
 };
 
 

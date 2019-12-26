@@ -32,7 +32,7 @@ typedef Kernels<sum_simple::chunk_sum,
                 sum_chunked::chunk_sum,
                 sum_man_sse::chunk_sum,
                 sum_man_avx::chunk_sum> sum_kernels;
-typedef TestHarness<double, array_sum::sum, sum_kernels, chunk_sizes> array_sum_harness;
+typedef TestHarness<double, array_sum::test_function, sum_kernels, chunk_sizes> array_sum_harness;
 
 Benchmark<double>* array_sum_benchmark = array_sum_harness::prepare_benchmark("array_sum");                
 
@@ -47,41 +47,14 @@ Benchmark<double>* array_sum_benchmark = array_sum_harness::prepare_benchmark("a
 //     Tests<double, mul_avx::ToTest, chunks>::prepare_benchmarks("mul_avx\t")
 // };
 
-void run_benchmarks(Benchmark<double>* benchmark, std::complex<double> *arr, std::size_t to_sum, const std::complex<double> ref) {
-    std::cout << benchmark->label;
-    for (auto& test_function : benchmark->kernel_tests[0]->tests)
-        std::cout << "\t\t" << test_function.param;
-    std::cout << std::endl;
-    
-    Timer t;
-    for (auto kernel_test : benchmark->kernel_tests) {
-        std::cout << kernel_test->label << "\t";
-        
-        for (auto& test_function : kernel_test->tests) {
-            t.reset();
-            std::complex<double> result = test_function.tf(arr, to_sum);
-            size_t elapsed = t.elapsed();
-                
-            printf("\t%lu (%d)", elapsed, abs(result - ref) < 1e-6);
-        }
-        std::cout << std::endl;
-    }
-}
-
 int main(int argc, char **argv) {
     if (argc < 2)
         return 1;
     
-    std::size_t to_sum = atoi(argv[1]);
+    std::size_t count = atoi(argv[1]);
 
-    std::complex<double> *arr_to_sum = new std::complex<double>[to_sum];
-    for (size_t i = 0; i < to_sum; i++) {
-        arr_to_sum[i] = i + 1;
-    }
-    std::complex<double> sum = array_sum::sum<double, 1, sum_simple::chunk_sum::core>::compute(arr_to_sum, to_sum);
-
-    std::cout << "Summation: " << av::inst_set << " instruction set. Expected result: " << sum << std::endl;
-    run_benchmarks(array_sum_benchmark, arr_to_sum, to_sum, sum);
+    std::cout << av::inst_set << " instruction set" << std::endl;
+    array_sum_harness::run_benchmark(array_sum_benchmark, count);
 
 //     std::complex<double> *arr_to_mul = new std::complex<double>[to_sum];
 //     for (size_t i = 0; i < to_sum; i++) {
