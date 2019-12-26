@@ -26,21 +26,21 @@
 
 #include "test_harness.hpp"
 
-typedef KernelParameters<1, 2, 4, 8, 16, 24, 32, 48, 64> chunk_sizes;
-typedef Kernels<array_sum::sum,
-                sum_simple::chunk_sum, 
+typedef KernelParameters<1, 2, 4, 8, 12, 16, 20, 24, 32, 48, 64> chunk_sizes;
+typedef Kernels<sum_simple::chunk_sum, 
                 sum_unroll::chunk_sum, 
                 sum_chunked::chunk_sum,
                 sum_man_sse::chunk_sum,
                 sum_man_avx::chunk_sum> sum_kernels;
+typedef TestHarness<double, array_sum::sum, sum_kernels, chunk_sizes> array_sum_harness;
 
-Benchmark<double>* array_sum_benchmark = TestHarness<double, sum_kernels, chunk_sizes>::prepare_benchmark("array_sum");                
+Benchmark<double>* array_sum_benchmark = array_sum_harness::prepare_benchmark("array_sum");                
 
 
 
 // std::vector<BenchmarkWrapper<double>*> mul_tasks = {
 //     Tests<double, mul_simple::ToTest, chunks>::prepare_benchmarks("mul_simple"),
-//     Tests<double, mul_unroll::ToTest, chunks>::prepare_benchmarks("mul_unroll"),
+//     Tests<double, mul_unroll::ToTest, chunks>::prepare_benchmarks("musuml_unroll"),
 //     Tests<double, mul_old_sse::ToTest, chunks>::prepare_benchmarks("mul_old_sse"),
 //     Tests<double, mul_old_avx::ToTest, chunks>::prepare_benchmarks("mul_old_avx"),
 //     Tests<double, mul_sse::ToTest, chunks>::prepare_benchmarks("mul_sse\t"),
@@ -76,11 +76,11 @@ int main(int argc, char **argv) {
 
     std::complex<double> *arr_to_sum = new std::complex<double>[to_sum];
     for (size_t i = 0; i < to_sum; i++) {
-        arr_to_sum[i] = i;
+        arr_to_sum[i] = i + 1;
     }
     std::complex<double> sum = array_sum::sum<double, 1, sum_simple::chunk_sum::core>::compute(arr_to_sum, to_sum);
 
-    std::cout << "Summation: " << av::inst_set << " instruction set" << std::endl;
+    std::cout << "Summation: " << av::inst_set << " instruction set. Expected result: " << sum << std::endl;
     run_benchmarks(array_sum_benchmark, arr_to_sum, to_sum, sum);
 
 //     std::complex<double> *arr_to_mul = new std::complex<double>[to_sum];
