@@ -36,14 +36,8 @@ typedef Kernels<array_sum::sum,
 
 Benchmark<double>* array_sum_benchmark = TestHarness<double, sum_kernels, chunk_sizes>::prepare_benchmark("array_sum");                
 
-// std::vector<BenchmarkWrapper<double>*> sum_tasks = {
-//     Tests<double, sum_simple::ToTest, chunks>::prepare_benchmarks("sum_simple"),
-//     Tests<double, sum_unroll::ToTest, chunks>::prepare_benchmarks("sum_unroll"),
-//     Tests<double, sum_chunked::ToTest, chunks>::prepare_benchmarks("sum_chunked"),
-//     Tests<double, sum_man_sse::ToTest, chunks>::prepare_benchmarks("sum_man_sse"),
-//     Tests<double, sum_man_avx::ToTest, chunks>::prepare_benchmarks("sum_man_avx"),
-// };
-// 
+
+
 // std::vector<BenchmarkWrapper<double>*> mul_tasks = {
 //     Tests<double, mul_simple::ToTest, chunks>::prepare_benchmarks("mul_simple"),
 //     Tests<double, mul_unroll::ToTest, chunks>::prepare_benchmarks("mul_unroll"),
@@ -84,7 +78,7 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < to_sum; i++) {
         arr_to_sum[i] = i;
     }
-    std::complex<double> sum = sum_simple::sum<double, 1>(arr_to_sum, to_sum);
+    std::complex<double> sum = array_sum::sum<double, 1, sum_simple::chunk_sum::core>::compute(arr_to_sum, to_sum);
 
     std::cout << "Summation: " << av::inst_set << " instruction set" << std::endl;
     run_benchmarks(array_sum_benchmark, arr_to_sum, to_sum, sum);
