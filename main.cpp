@@ -32,9 +32,10 @@ typedef Kernels<sum_simple::chunk_sum,
                 sum_chunked::chunk_sum,
                 sum_man_sse::chunk_sum,
                 sum_man_avx::chunk_sum> sum_kernels;
-typedef TestHarness<double, array_sum::test_function, sum_kernels, chunk_sizes> array_sum_harness;
+typedef TestHarness<array_sum::test_function<double>, sum_kernels, chunk_sizes> array_sum_harness;
+typedef array_sum::test_function<double>::input_data array_sum_input;
 
-Benchmark<double>* array_sum_benchmark = array_sum_harness::prepare_benchmark("array_sum");                
+Benchmark<array_sum_input>* array_sum_benchmark = array_sum_harness::prepare_benchmark("array_sum");                
 
 
 

@@ -6,11 +6,28 @@
 
 namespace array_sum {
 
+    template<class T> 
     struct test_function {
+
+        struct input_data {
+            std::vector<std::complex<T>> arr;
+            std::complex<T> reference;
+            
+            input_data(std::size_t count) : arr(count) {
+                for (size_t i = 0; i < count; i++) {
+                    arr[i] = i + 1;
+                    reference += arr[i];
+                }
+            }
+        };
         
-        template<class T, std::size_t chunk_size, template<class TT, std::size_t sz> class chunk_sum>
+        
+        template<std::size_t chunk_size, template<class TT, std::size_t sz> class chunk_sum>
         struct core {
-            static std::complex<T> compute(std::complex<T> *arr, std::size_t count) {
+            static bool compute(input_data& input) {
+                std::size_t count = input.arr.size();
+                std::complex<T> *arr = input.arr.data();
+                
                 std::complex<T> acc[chunk_size];
                 const std::size_t to_sum = count - count % chunk_size;
                 
@@ -34,27 +51,7 @@ namespace array_sum {
                     result += acc[j];
                 }
                 
-                return result;
-            }
-        };
-        
-        template<class T>
-        struct input_data {
-            std::vector<std::complex<T>> arr;
-            
-            input_data(std::size_t count) : arr(count) {
-                for (size_t i = 0; i < count; i++)
-                    arr[i] = i + 1;
-            }
-            
-            std::complex<T> get_reference() {
-                std::complex<T> result = 0;
-                
-                for (std::size_t i = 0; i < arr.size(); i++) {
-                    result += arr[i];
-                }
-
-                return result;
+                return abs(result - input.reference) < 1e-6;
             }
         };
         
