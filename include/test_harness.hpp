@@ -83,12 +83,36 @@ struct KernelTest {
 
 template<class input_data>
 struct Benchmark {
-    std::size_t size;
     std::string label;
 
     std::vector<KernelTest<input_data>*> kernel_tests;
 
-    Benchmark(std::size_t _size, std::string _label) : size(_size), label(_label), kernel_tests(size) {}
+    Benchmark(std::size_t _size, std::string _label) : label(_label), kernel_tests(_size) {}
+
+    void run(std::size_t count) {
+        input_data input(count);
+
+        std::cout << label;
+        for (auto& test_function : kernel_tests[0]->tests)
+            std::cout << "\t\t" << test_function.param;
+        std::cout << std::endl;
+        
+        Timer t;
+        for (auto kernel_test : kernel_tests) {
+            std::cout << kernel_test->label << "\t";
+            
+            for (auto& test_function : kernel_test->tests) {
+                t.reset();
+                bool result = test_function.tf(input);
+                size_t elapsed = t.elapsed();
+                    
+                printf("\t%lu (%d)", elapsed, result);
+            }
+            std::cout << std::endl;
+        }
+    }
+    
+    
 };
 
 
@@ -151,29 +175,6 @@ struct TestHarness {
         GenKernelTests<test_func, typename kernels::next, params, kernels::total - 1>::gen(bench);
 
         return bench;
-    }
-    
-    static void run_benchmark(Benchmark<input_data>* benchmark, std::size_t count) {
-        typename test_func::input_data input(count);
-
-        std::cout << benchmark->label;
-        for (auto& test_function : benchmark->kernel_tests[0]->tests)
-            std::cout << "\t\t" << test_function.param;
-        std::cout << std::endl;
-        
-        Timer t;
-        for (auto kernel_test : benchmark->kernel_tests) {
-            std::cout << kernel_test->label << "\t";
-            
-            for (auto& test_function : kernel_test->tests) {
-                t.reset();
-                bool result = test_function.tf(input);
-                size_t elapsed = t.elapsed();
-                    
-                printf("\t%lu (%d)", elapsed, result);
-            }
-            std::cout << std::endl;
-        }
     }
     
 };

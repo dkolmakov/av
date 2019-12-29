@@ -59,8 +59,8 @@ int main(int argc, char **argv) {
 
     std::cout << av::inst_set << " instruction set" << std::endl;
 
-    array_sum_harness::run_benchmark(array_sum_benchmark, count);
-    array_mul_harness::run_benchmark(array_mul_benchmark, count);
+    array_sum_benchmark->run(count);
+    array_mul_benchmark->run(count);
 
     return 0;
 }
