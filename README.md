@@ -17,6 +17,7 @@ It can be included to the destination project simply by adding `include_sudirect
 ## Description
 
 - `kernel` - an elementary arithmetic operation, has `core` template structure and get_label() function
-- `compute_function` - user defined structure with fixed interface containing function `compute`. It can be built using one or more `kernels`.
+- `test_function` - user defined structure with fixed interface containing function `compute` and structure `input_data`. `compute` can be built using one or more `kernels`.
 - `benchmark` - automatically generated set of `kernel_tests`, one for each specific `kernel`.
-- `kernel_tests` - a set of `compute_functions` built using a specialized version of kernels, one for each specific `kernel parameter`.
+- `kernel_tests` - a set of `test_functions` built using a specialized version of kernels, one for each specific `kernel_parameter`.
+- `kernel_parameter` - a value which specializes kernel by characteristics depending on the hardware properties.
