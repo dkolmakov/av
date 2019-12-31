@@ -26,22 +26,33 @@ namespace array_mul {
         };
         
         
-        template<std::size_t chunk_size, template<class TT, std::size_t sz> class chunk_mul>
+        template<std::size_t chunk_size, std::size_t n_chunks, template<class TT, std::size_t sz, std::size_t n> class chunk_mul>
         struct core {
             static bool compute(input_data& input) {
+                const std::size_t portion_size = chunk_size * n_chunks;
                 std::size_t count = input.arr.size();
                 std::complex<T> *arr = input.arr.data();
                 
-                std::complex<T> acc[chunk_size];
-                const std::size_t to_sum = count - count % chunk_size;
+                std::complex<T> acc[portion_size];
+                const std::size_t to_sum = count - count % portion_size;
                 
                 for (std::size_t i = 0; i < chunk_size; i++)
                     acc[i] = 1;
                 
+                std::complex<T> *left[n_chunks];
+                for (std::size_t j = 0; j < n_chunks; j++)
+                    left[j] = acc + j * chunk_size;
+
+                std::complex<T> *right[n_chunks];
+                
                 // Sum by chunks
                 asm volatile ("nop;nop;nop;");
-                for (std::size_t i = 0; i < to_sum; i += chunk_size) {
-                    chunk_mul<T, chunk_size>::compute(acc, arr + i);
+                for (std::size_t i = 0; i < to_sum; i += portion_size) {
+                    
+                    for (std::size_t j = 0; j < n_chunks; j++)
+                        right[j] = arr + i + j * chunk_size;
+
+                    chunk_mul<T, chunk_size, n_chunks>::compute(left, right);
                 }
                 asm volatile ("nop;nop;nop;");
                 

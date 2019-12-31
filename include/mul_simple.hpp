@@ -11,11 +11,13 @@ namespace mul_simple {
             return "mul_simple";
         }
         
-        template <class T, std::size_t chunk_size>
+        template <class T, std::size_t chunk_size, std::size_t n_chunks>
         struct core {
-            static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-                for (std::size_t i = 0; i < chunk_size; i++)
-                    acc[i] *= arr[i];
+            static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
+                for (std::size_t i = 0; i < n_chunks; i++) {
+                    for (std::size_t j = 0; j < chunk_size; j++)
+                        acc[i][j] *= arr[i][j];
+                }
             }
         };
     };

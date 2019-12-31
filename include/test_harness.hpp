@@ -120,7 +120,7 @@ template<class test_func,
          class kernel, class params, std::size_t index>
 struct GenTests {
     static void gen(KernelTest<typename test_func::input_data> *kernel_test) {
-        kernel_test->tests[index].tf = test_func::template core<params::val, kernel::template core>::compute;
+        kernel_test->tests[index].tf = test_func::template core<params::val, 1, kernel::template core>::compute;
         kernel_test->tests[index].param = params::val;
         GenTests<test_func, kernel, typename params::next, index - 1>::gen(kernel_test);
     }
@@ -130,7 +130,7 @@ template<class test_func,
          class kernel, class params>
 struct GenTests<test_func, kernel, params, 0> {
     static void gen(KernelTest<typename test_func::input_data> *kernel_test) {
-        kernel_test->tests[0].tf = test_func::template core<params::val, kernel::template core>::compute;
+        kernel_test->tests[0].tf = test_func::template core<params::val, 1, kernel::template core>::compute;
         kernel_test->tests[0].param = params::val;
     }
 };

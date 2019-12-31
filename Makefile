@@ -55,7 +55,7 @@ $(BINDIR)/$(APP)_sse: $(OBJECTS_SSE) $(HEADERS)
 	$(CXX) $(CXXFLAGS) -msse4.2 $(OBJECTS_SSE) -o $@
 
 $(BINDIR)/$(APP)_avx: $(OBJECTS_AVX) $(HEADERS)
-	$(CXX) $(CXXFLAGS) -mavx $(OBJECTS_AVX) -o $@
+	$(CXX) $(CXXFLAGS) -mavx2 $(OBJECTS_AVX) -o $@
 
 $(BINDIR)/$(APP)_avx512: $(OBJECTS_AVX512) $(HEADERS)
 	$(CXX) $(CXXFLAGS) -mavx512f $(OBJECTS_AVX512) -o $@
@@ -67,7 +67,7 @@ $(OBJDIR)/%.osse: %.cpp
 	$(CXX) $(CXXFLAGS) -msse4.2 $(INCLUDES) -c $< -o $@ 
 
 $(OBJDIR)/%.oavx: %.cpp
-	$(CXX) $(CXXFLAGS) -mavx $(INCLUDES) -c $< -o $@ 
+	$(CXX) $(CXXFLAGS) -mavx2 $(INCLUDES) -c $< -o $@ 
 
 $(OBJDIR)/%.oavx512: %.cpp
 	$(CXX) $(CXXFLAGS) -mavx512f $(INCLUDES) -c $< -o $@ 
