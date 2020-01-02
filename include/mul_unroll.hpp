@@ -25,6 +25,25 @@ namespace implementation {
             acc[index] *= arr[index];
         }
     };
+
+    template <class T, std::size_t chunk_size, std::size_t index>
+    struct unroll_chunks;
+
+    template <class T, std::size_t chunk_size>
+    struct unroll_chunks<T, chunk_size, 0> {
+        static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
+            chunk_mul<T, chunk_size>::compute(left[0], right[0]);
+        }
+    };
+    
+    template <class T, std::size_t chunk_size, std::size_t index>
+    struct unroll_chunks {
+        static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
+            unroll_chunks<T, chunk_size, index - 1>::compute(left, right);
+            chunk_mul<T, chunk_size>::compute(left[index], right[index]);
+        }
+    };
+    
 }
 
     struct chunk_mul {
@@ -32,10 +51,10 @@ namespace implementation {
             return "mul_unroll";
         }
         
-        template <class T, std::size_t chunk_size>
+        template <class T, std::size_t chunk_size, std::size_t n_chunks>
         struct core {
-            static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-                implementation::chunk_mul<T, chunk_size>::compute(acc, arr);
+            static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
+                implementation::unroll_chunks<T, chunk_size, n_chunks - 1>::compute(left, right);
             }
         };
     };

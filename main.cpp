@@ -39,7 +39,7 @@ typedef KernelParameters<1, 2, 4, 8, 12, 16, 20, 24, 32, 48, 64> chunk_sizes;
 // 
 // Benchmark<array_sum_input>* array_sum_benchmark = array_sum_harness::prepare_benchmark("array_sum");                
 
-typedef Kernels<mul_simple::chunk_mul> mul_kernels;
+typedef Kernels<mul_simple::chunk_mul, mul_unroll::chunk_mul> mul_kernels;
 typedef TestHarness<array_mul::test_function<double>, mul_kernels, chunk_sizes> array_mul_harness;
 typedef array_mul::test_function<double>::input_data array_mul_input;
 
