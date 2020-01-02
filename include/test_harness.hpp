@@ -27,12 +27,20 @@ struct CountedParams {
     typedef CountedParams<index + 1, params_left...> next;
     static const std::size_t val = param;
     static const std::size_t total = next::total;
+
+    static std::string get_label() {
+        return std::to_string(val);
+    }
 };
 
 template<std::size_t index, std::size_t param>
 struct CountedParams<index, param> {
     static const std::size_t val = param;
     static const std::size_t total = index + 1;
+
+    static std::string get_label() {
+        return std::to_string(val);
+    }
 };
 
 template<std::size_t... params>
@@ -48,12 +56,20 @@ struct CountedKernels {
     typedef CountedKernels<index + 1, kernels_left...> next;
     typedef kernel val;
     static const std::size_t total = next::total;
+
+    static std::string get_label() {
+        return val::get_label();
+    }
 };
 
 template<std::size_t index, class kernel>
 struct CountedKernels<index, kernel> {
     typedef kernel val;
     static const std::size_t total = index + 1;
+
+    static std::string get_label() {
+        return val::get_label();
+    }
 };
 
 template<class ... kernels>
@@ -61,6 +77,64 @@ struct Kernels {
     typedef CountedKernels<0, kernels...> next;
     static const std::size_t total = next::total;
 };
+
+template<class kernel, class param, class kernels, class params, std::size_t kcounter, std::size_t pcounter>
+struct CountedPairs;
+
+template<class kernel, class param, class kernels, class params>
+struct CountedPairs<kernel, param, kernels, params, 0, 0> {
+    typedef kernel left;
+    typedef param right;
+
+    static std::string get_label() {
+        return left::get_label() + " with " + right::get_label();
+    }
+};
+
+template<class kernel, class param, class kernels, class params, std::size_t kcounter>
+struct CountedPairs<kernel, param, kernels, params, kcounter, 0> {
+    typedef CountedPairs<typename kernel::next, typename params::next, kernels, params, kcounter - 1, params::total - 1> next;
+    typedef kernel left;
+    typedef param right;
+
+    static std::string get_label() {
+        return left::get_label() + " with " + right::get_label();
+    }
+};
+
+template<class kernel, class param, class kernels, class params, std::size_t kcounter, std::size_t pcounter>
+struct CountedPairs {
+    typedef CountedPairs<kernel, typename param::next, kernels, params, kcounter, pcounter - 1> next;
+    typedef kernel left;
+    typedef param right;
+
+    static std::string get_label() {
+        return left::get_label() + " with " + right::get_label();
+    }
+};
+
+template<class kernels, class params>
+struct Pairs {
+    typedef CountedPairs<typename kernels::next, typename params::next, kernels, params, kernels::total - 1, params::total - 1> next;
+    static const std::size_t total = kernels::total * params::total;
+};
+
+
+template<class pairs, std::size_t index>
+struct PairsPrinter {
+    static void print() {
+        std::cout << pairs::get_label() << std::endl;
+        PairsPrinter<typename pairs::next, index - 1>::print();
+    }
+};
+
+template<class pairs>
+struct PairsPrinter<pairs, 0> {
+    static void print() {
+        std::cout << pairs::get_label() << std::endl;
+    }
+};
+
 
 
 
