@@ -27,7 +27,8 @@
 
 #include "test_harness.hpp"
 
-typedef KernelParameters<1, 2, 4, 8, 12, 16, 20, 24, 32, 48, 64> chunk_sizes;
+typedef KernelParameters<1, 2, 4, 8, 16, 32, 64> chunk_sizes;
+typedef KernelParameters<1, 2, 4, 8, 16, 32, 64> n_chunks;
 
 // typedef Kernels<sum_simple::chunk_sum, 
 //                 sum_unroll::chunk_sum, 
@@ -40,7 +41,7 @@ typedef KernelParameters<1, 2, 4, 8, 12, 16, 20, 24, 32, 48, 64> chunk_sizes;
 // Benchmark<array_sum_input>* array_sum_benchmark = array_sum_harness::prepare_benchmark("array_sum");                
 
 typedef Kernels<mul_simple::chunk_mul> mul_kernels;
-typedef TestHarness<array_mul::test_function<double>, mul_kernels, chunk_sizes> array_mul_harness;
+typedef TestHarness<array_mul::test_function<double>, chunk_sizes, n_chunks, mul_kernels> array_mul_harness;
 typedef array_mul::test_function<double>::input_data array_mul_input;
 
 Benchmark<array_mul_input>* array_mul_benchmark = array_mul_harness::prepare_benchmark("array_mul");                

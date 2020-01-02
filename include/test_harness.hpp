@@ -71,21 +71,34 @@ struct TestFunc {
 };
 
 
-template<class input_data>
+template<class input_data, class param, class ... params>
 struct KernelTest {
-    std::size_t size;
+    const bool is_last = false;
+    typedef KernelTest<input_data, params...> Tests;
+    
+    std::string label;
+    std::vector<Tests*> tests;
+
+    KernelTest(std::size_t _size, std::string _label) : label(_label), tests(_size) {}
+};
+
+template<class input_data, class param>
+struct KernelTest<input_data, param> {
+    const bool is_last = true;
     std::string label;
     std::vector<TestFunc<input_data>> tests;
 
-    KernelTest(std::size_t _size, std::string _label) : size(_size), label(_label), tests(size) {}
+    KernelTest(std::size_t _size, std::string _label) : label(_label), tests(_size) {}
+
 };
 
 
-template<class input_data>
+template<class input_data, class ... params>
 struct Benchmark {
     std::string label;
-
-    std::vector<KernelTest<input_data>*> kernel_tests;
+    typedef KernelTest<input_data, params...> Tests;
+    
+    std::vector<Tests*> kernel_tests;
 
     Benchmark(std::size_t _size, std::string _label) : label(_label), kernel_tests(_size) {}
 
@@ -111,68 +124,86 @@ struct Benchmark {
             std::cout << std::endl;
         }
     }
-    
-    
 };
 
 
-template<class test_func,
-         class kernel, class params, std::size_t index>
+template<class test_func, class params, std::size_t index>
 struct GenTests {
-    static void gen(KernelTest<typename test_func::input_data> *kernel_test) {
-        kernel_test->tests[index].tf = test_func::template core<params::val, 1, kernel::template core>::compute;
-        kernel_test->tests[index].param = params::val;
-        GenTests<test_func, kernel, typename params::next, index - 1>::gen(kernel_test);
+    typedef typename test_func::input_data input_data;
+    
+    static void gen(std::vector<TestFunc<input_data>>& tests) {
+        tests[index].tf = test_func::template core<params::val>::compute;
+        tests[index].param = params::val;
+        GenTests<test_func, typename params::next, index - 1>::gen(tests);
     }
 };
 
-template<class test_func,
-         class kernel, class params>
-struct GenTests<test_func, kernel, params, 0> {
-    static void gen(KernelTest<typename test_func::input_data> *kernel_test) {
-        kernel_test->tests[0].tf = test_func::template core<params::val, 1, kernel::template core>::compute;
-        kernel_test->tests[0].param = params::val;
+template<class test_func, class params>
+struct GenTests<test_func, params, 0> {
+    typedef typename test_func::input_data input_data;
+    
+    static void gen(std::vector<TestFunc<input_data>>& tests) {
+        tests[0].tf = test_func::template core<params::val>::compute;
+        tests[0].param = params::val;
     }
 };
 
+template<class test_func, class kernel, std::size_t index, class ... params>
+struct IterOverCurrentLevel;
 
-template<class test_func,
-         class kernel, class params, std::size_t index>
+template<class test_func, class param, class ... params>
 struct GenKernelTests {
     typedef typename test_func::input_data input_data;
     
-    static void gen(std::vector<KernelTest<input_data>*>& kernel_tests) {
-        KernelTest<input_data> *kernel_test = new KernelTest<input_data>(params::total, kernel::val::get_label());
-        GenTests<test_func, typename kernel::val, typename params::next, params::total - 1>::gen(kernel_test);
+    static void gen(KernelTest<input_data, params...>** kernel_test) {
+        KernelTest<input_data, params...> *to_add = new KernelTest<input_data, params...>(param::total, param::val::get_label());
+        *kernel_test = to_add;
 
-        kernel_tests[index] = kernel_test;
-
-        GenKernelTests<test_func, typename kernel::next, params, index - 1>::gen(kernel_tests);
+        IterOverCurrentLevel<test_func, typename param::next, param::total - 1, params...>::gen(to_add->tests);
     }
 };
 
-template<class test_func,
-         class kernel, class params>
-struct GenKernelTests<test_func, kernel, params, 0> {
+template<class test_func, class param>
+struct GenKernelTests<test_func, param> {
     typedef typename test_func::input_data input_data;
     
-    static void gen(std::vector<KernelTest<input_data>*>& kernel_tests) {
-        KernelTest<input_data> *kernel_test = new KernelTest<input_data>(params::total, kernel::val::get_label());
-        GenTests<test_func, typename kernel::val, typename params::next, params::total - 1>::gen(kernel_test);
-
-        kernel_tests[0] = kernel_test;
+    static void gen(KernelTest<input_data, param>** kernel_test) {
+        KernelTest<input_data, param> *to_add = new KernelTest<input_data, param>(param::total, param::val::get_label());
+        *kernel_test = to_add;
+        
+        GenTests<typename test_func::template core<param>, typename param::next, param::total - 1>::gen(to_add->tests);
     }
 };
 
 
-template<class test_func, class kernels, class params>
+template<class test_func, class kernel, std::size_t index, class ... params>
+struct IterOverCurrentLevel {
+    typedef typename test_func::input_data input_data;
+    
+    static void gen(std::vector<KernelTest<input_data, params...>*>& kernel_tests) {
+        GenKernelTests<typename test_func::template core<kernel>, params...>::gen(&kernel_tests[index]);
+        IterOverCurrentLevel<test_func, typename kernel::next, index - 1, params...>::gen(kernel_tests);
+    }
+};
+
+template<class test_func, class kernel, class ... params>
+struct IterOverCurrentLevel<test_func, kernel, 0, params...> {
+    typedef typename test_func::input_data input_data;
+    
+    static void gen(std::vector<KernelTest<input_data, params...>*>& kernel_tests) {
+        GenKernelTests<typename test_func::template core<kernel>, params...>::gen(&kernel_tests[0]);
+    }
+};
+
+
+template<class test_func, class param, class ... params>
 struct TestHarness {
     typedef typename test_func::input_data input_data;
     
-    static Benchmark<input_data>* prepare_benchmark(std::string label) {
-        Benchmark<input_data>* bench = new Benchmark<input_data>(kernels::total, label);
+    static Benchmark<input_data, param, params...>* prepare_benchmark(std::string label) {
+        Benchmark<input_data, param, params...>* bench = new Benchmark<input_data, param, params...>(param::total, label);
 
-        GenKernelTests<test_func, typename kernels::next, params, kernels::total - 1>::gen(bench->kernel_tests);
+        IterOverCurrentLevel<test_func, typename param::next, param::total - 1, params...>::gen(bench->kernel_tests);
 
         return bench;
     }
