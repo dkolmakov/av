@@ -11,8 +11,7 @@
 
 #include "mul_simple.hpp"
 #include "mul_unroll.hpp"
-#include "mul_old_sse.hpp"
-#include "mul_old_avx.hpp"
+#include "mul_old.hpp"
 #include "mul_man.hpp"
 
 #include "test_harness.hpp"
@@ -21,7 +20,7 @@ using namespace av_prof;
 
 typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
 typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
-typedef Kernels<mul_simple::chunk_mul, mul_unroll::chunk_mul, mul_man::chunk_mul> mul_kernels;
+typedef Kernels<mul_simple::chunk_mul, mul_unroll::chunk_mul, mul_man::chunk_mul, mul_old::chunk_mul> mul_kernels;
 
 typedef Pairs<mul_kernels, chunk_sizes> mul_kernels_chunk_sizes;
 typedef Pairs<mul_kernels_chunk_sizes, chunk_numbers> mul_kernels_chunk_sizes_numbers;

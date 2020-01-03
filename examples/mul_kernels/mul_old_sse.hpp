@@ -5,9 +5,9 @@
 
 #include "common.hpp"
 
-namespace mul_old_sse {
+namespace mul_old {
     
-namespace implementation {
+namespace sse {
 
     template <class T, std::size_t index>
     struct unpack;
@@ -80,48 +80,7 @@ namespace implementation {
         }
     };
     
-    // Original version id from https://www.codeproject.com/Articles/874396/Crunching-Numbers-with-AVX-and-AVX
-    // And improved one is here https://stackoverflow.com/questions/39509746/how-to-square-two-complex-doubles-with-256-bit-avx-vectors
-
-    template <class T, std::size_t chunk_size, std::size_t reg_size = av::SIMD_REG_SIZE>
-    struct chunk_mul;
-    
-    template <class T, std::size_t chunk_size>
-    struct chunk_mul<T, chunk_size, 16> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-            __m128d res[chunk_size];
-            unpack<T, chunk_size - 1>::doIt(res, acc);
-            
-            __m128d v0[chunk_size];
-            unpack<T, chunk_size - 1>::doIt(v0, arr);
-            multiply<T, chunk_size - 1>::doIt(res, v0);
-            
-            pack<T, chunk_size - 1>::doIt(acc, res);
-        }
-    };
-
-    template <class T, std::size_t chunk_size, std::size_t reg_size>
-    struct chunk_mul {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-            // Default implementation
-            for (std::size_t i = 0; i < chunk_size; i++)
-                acc[i] *= arr[i];
-        }
-    };
 }
-
-    struct chunk_mul {
-        static std::string get_label() {
-            return "mul_old_sse";
-        }
-        
-        template <class T, std::size_t chunk_size>
-        struct core {
-            static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-                implementation::chunk_mul<T, chunk_size>::compute(acc, arr);
-            }
-        };
-    };
 
 }
 
