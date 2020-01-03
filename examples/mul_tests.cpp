@@ -30,15 +30,18 @@ typedef array_mul::test_function<double>::input_data array_mul_input;
 
 
 int main(int argc, char **argv) {
-    if (argc < 2)
+    if (argc < 3)
         return 1;
     
     std::size_t count = atoi(argv[1]);
+    std::size_t repeats = atoi(argv[2]);
     std::cout << av::inst_set << " instruction set" << std::endl;
 
     Benchmark<array_mul_input>* array_mul_benchmark = array_mul_harness::prepare_benchmark("array_mul");
     
-    array_mul_benchmark->run(count);
+    for (std::size_t i = 0; i < repeats; i++)
+        array_mul_benchmark->run(count);
+    
     array_mul_benchmark->print_results();
 
 //     PairsPrinter<mul_kernels_chunk_sizes_numbers::next, mul_kernels_chunk_sizes_numbers::total - 1>::print();

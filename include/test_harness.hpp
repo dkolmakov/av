@@ -147,7 +147,7 @@ struct TestFunc {
     bool (*tf)(input_data& input);
     std::string (*get_label)(void);
     size_t elapsed = 0;
-    bool result = false;
+    bool result = true;
 };
 
 
@@ -165,8 +165,8 @@ struct Benchmark {
         Timer t;
         for (auto& test : tests) {
             t.reset();
-            test.result = test.tf(input);
-            test.elapsed = t.elapsed();
+            test.result = test.result && test.tf(input);
+            test.elapsed += t.elapsed();
         }
     }
     
