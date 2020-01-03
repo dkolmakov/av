@@ -5,15 +5,15 @@
 
 #include "common.hpp"
 
-namespace mul_sse {
+namespace mul_man {
     
-namespace implementation {
+namespace sse {
 
     template <class T, std::size_t index>
-    struct unpackB;
+    struct unpack_complex;
 
     template <class T>
-    struct unpackB<T, 0> {
+    struct unpack_complex<T, 0> {
         static force_inline void unpack(__m128d *realB, __m128d *imagB, std::complex<T> *arr) {
             __m128d B0 = _mm_loadu_pd((double*)(arr + 0 * 2));
             __m128d B2 = _mm_loadu_pd((double*)(arr + 0 * 2 + 1));
@@ -23,13 +23,13 @@ namespace implementation {
     };
 
     template <class T, std::size_t index>
-    struct unpackB {
+    struct unpack_complex {
         static force_inline void unpack(__m128d *realB, __m128d *imagB, std::complex<T> *arr) {
             __m128d B0 = _mm_loadu_pd((double*)(arr + index * 2));
             __m128d B2 = _mm_loadu_pd((double*)(arr + index * 2 + 1));
             realB[index] = _mm_unpacklo_pd(B0, B2);
             imagB[index] = _mm_unpackhi_pd(B0, B2);
-            unpackB<T, index - 1>::unpack(realB, imagB, arr);
+            unpack_complex<T, index - 1>::unpack(realB, imagB, arr);
         }
     };
     
@@ -91,47 +91,7 @@ namespace implementation {
         }
     };
     
-    template <class T, std::size_t chunk_size, std::size_t parity_checker, std::size_t reg_size = av::SIMD_REG_SIZE>
-    struct chunk_mul;
-    
-    template <class T, std::size_t chunk_size>
-    struct chunk_mul<T, chunk_size, 0, 16> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-            __m128d realA[chunk_size / 2];
-            __m128d imagA[chunk_size / 2]; 
-            unpackB<T, chunk_size / 2 - 1>::unpack(realA, imagA, acc);
-            
-            __m128d realB[chunk_size / 2];
-            __m128d imagB[chunk_size / 2];
-            unpackB<T, chunk_size / 2 - 1>::unpack(realB, imagB, arr);
-
-            multiply<T, chunk_size / 2 - 1>::compute(realA, imagA, realB, imagB);
-            pack<T, chunk_size / 2 - 1>::make(realA, imagA, acc);
-        }
-    };
-    
-    template <class T, std::size_t chunk_size, std::size_t parity_checker, std::size_t reg_size>
-    struct chunk_mul {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-            for (std::size_t i = 0; i < chunk_size; i++)
-                acc[i] *= arr[i];
-        }
-    };
-    
 }
-
-    struct chunk_mul {
-        static std::string get_label() {
-            return "mul_sse\t";
-        }
-        
-        template <class T, std::size_t chunk_size>
-        struct core {
-            static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-                implementation::chunk_mul<T, chunk_size, chunk_size % 2>::compute(acc, arr);
-            }
-        };
-    };
 
 
 }

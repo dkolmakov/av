@@ -7,45 +7,27 @@
 #include <array>
 #include <vector>
 
-#include "common.hpp"
-
-#include "array_sum.hpp"
 #include "array_mul.hpp"
 
 #include "mul_simple.hpp"
 #include "mul_unroll.hpp"
 #include "mul_old_sse.hpp"
 #include "mul_old_avx.hpp"
-#include "mul_avx.hpp"
-#include "mul_sse.hpp"
+#include "mul_man.hpp"
 
 #include "test_harness.hpp"
 
 using namespace av_prof;
 
 typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
-
 typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
-
-// typedef Kernels<sum_simple::chunk_sum, 
-//                 sum_unroll::chunk_sum, 
-//                 sum_chunked::chunk_sum,
-//                 sum_man_sse::chunk_sum,
-//                 sum_man_avx::chunk_sum> sum_kernels;
-// typedef TestHarness<array_sum::test_function<double>, sum_kernels, chunk_sizes> array_sum_harness;
-// typedef array_sum::test_function<double>::input_data array_sum_input;
-// 
-// Benchmark<array_sum_input>* array_sum_benchmark = array_sum_harness::prepare_benchmark("array_sum");                
-
-typedef Kernels<mul_simple::chunk_mul, mul_unroll::chunk_mul> mul_kernels;
+typedef Kernels<mul_simple::chunk_mul, mul_unroll::chunk_mul, mul_man::chunk_mul> mul_kernels;
 
 typedef Pairs<mul_kernels, chunk_sizes> mul_kernels_chunk_sizes;
 typedef Pairs<mul_kernels_chunk_sizes, chunk_numbers> mul_kernels_chunk_sizes_numbers;
 
 typedef TestHarness<array_mul::test_function<double>, mul_kernels_chunk_sizes_numbers> array_mul_harness;
 typedef array_mul::test_function<double>::input_data array_mul_input;
-
-Benchmark<array_mul_input>* array_mul_benchmark = array_mul_harness::prepare_benchmark("array_mul");                
 
 
 int main(int argc, char **argv) {
@@ -55,11 +37,13 @@ int main(int argc, char **argv) {
     std::size_t count = atoi(argv[1]);
     std::cout << av::inst_set << " instruction set" << std::endl;
 
-//     array_sum_benchmark->run(count);
+    Benchmark<array_mul_input>* array_mul_benchmark = array_mul_harness::prepare_benchmark("array_mul");
+    
     array_mul_benchmark->run(count);
     array_mul_benchmark->print_results();
 
 //     PairsPrinter<mul_kernels_chunk_sizes_numbers::next, mul_kernels_chunk_sizes_numbers::total - 1>::print();
 
+    delete array_mul_benchmark;
     return 0;
 }

@@ -5,17 +5,17 @@
 
 #include "common.hpp"
 
-namespace mul_avx {
+namespace mul_man {
     
-namespace implementation {
+namespace avx {
 
     // Initial idea took from https://stackoverflow.com/questions/39509746/how-to-square-two-complex-doubles-with-256-bit-avx-vectors
 
     template <class T, std::size_t index>
-    struct unpackB;
+    struct unpack_complex;
 
     template <class T>
-    struct unpackB<T, 0> {
+    struct unpack_complex<T, 0> {
         static force_inline void unpack(__m256d *realB, __m256d *imagB, std::complex<T> *arr) {
             __m256d B0 = _mm256_loadu_pd((double*)(arr + 0 * 4));
             __m256d B2 = _mm256_loadu_pd((double*)(arr + 0 * 4 + 2));
@@ -25,13 +25,13 @@ namespace implementation {
     };
 
     template <class T, std::size_t index>
-    struct unpackB {
+    struct unpack_complex {
         static force_inline void unpack(__m256d *realB, __m256d *imagB, std::complex<T> *arr) {
             __m256d B0 = _mm256_loadu_pd((double*)(arr + index * 4));
             __m256d B2 = _mm256_loadu_pd((double*)(arr + index * 4 + 2));
             realB[index] = _mm256_unpacklo_pd(B0, B2);
             imagB[index] = _mm256_unpackhi_pd(B0, B2);
-            unpackB<T, index - 1>::unpack(realB, imagB, arr);
+            unpack_complex<T, index - 1>::unpack(realB, imagB, arr);
         }
     };
     
@@ -92,49 +92,7 @@ namespace implementation {
             pack<T, index - 1>::make(realA, imagA, acc);
         }
     };
-    
-    
-    template <class T, std::size_t chunk_size, std::size_t parity_checker, std::size_t reg_size = av::SIMD_REG_SIZE>
-    struct chunk_mul;
-    
-    template <class T, std::size_t chunk_size>
-    struct chunk_mul<T, chunk_size, 0, 32> {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-            __m256d realA[chunk_size / 4];
-            __m256d imagA[chunk_size / 4]; 
-            unpackB<T, chunk_size / 4 - 1>::unpack(realA, imagA, acc);
-            
-            __m256d realB[chunk_size / 4];
-            __m256d imagB[chunk_size / 4];
-            unpackB<T, chunk_size / 4 - 1>::unpack(realB, imagB, arr);
-
-            multiply<T, chunk_size / 4 - 1>::compute(realA, imagA, realB, imagB);
-            pack<T, chunk_size / 4 - 1>::make(realA, imagA, acc);
-        }
-    };
-    
-    template <class T, std::size_t chunk_size, std::size_t parity_checker, std::size_t reg_size>
-    struct chunk_mul {
-        static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-            for (std::size_t i = 0; i < chunk_size; i++)
-                acc[i] *= arr[i];
-        }
-    };
-   
 }
-
-    struct chunk_mul {
-        static std::string get_label() {
-            return "mul_avx\t";
-        }
-        
-        template <class T, std::size_t chunk_size>
-        struct core {
-            static force_inline void compute(std::complex<T> *acc, std::complex<T> *arr) {
-                implementation::chunk_mul<T, chunk_size, chunk_size % 4>::compute(acc, arr);
-            }
-        };
-    };
 
 }
 

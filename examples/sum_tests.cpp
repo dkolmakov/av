@@ -10,8 +10,6 @@
 #include "common.hpp"
 
 #include "array_sum.hpp"
-#include "array_mul.hpp"
-
 #include "sum_simple.hpp"
 #include "sum_unroll.hpp"
 #include "sum_chunked.hpp"
