@@ -2,6 +2,8 @@
 
 #include <chrono>
 #include <vector>
+#include <algorithm>
+
 #include "common.hpp"
 
 class Timer
@@ -141,7 +143,9 @@ struct PairsPrinter<pairs, 0> {
 template<class input_data>
 struct TestFunc {
     bool (*tf)(input_data& input);
-    std::string label;
+    std::string (*get_label)(void);
+    size_t elapsed = 0;
+    bool result = false;
 };
 
 
@@ -158,18 +162,21 @@ struct Benchmark {
 
         Timer t;
         for (auto& test : tests) {
-            std::cout << test.label << "\t";
-            
             t.reset();
-            bool result = test.tf(input);
-            size_t elapsed = t.elapsed();
-                
-            printf("\t%lu (%d)", elapsed, result);
-            
-            std::cout << std::endl;
+            test.result = test.tf(input);
+            test.elapsed = t.elapsed();
         }
     }
     
+    void print_results() {
+        std::sort(tests.begin(), tests.end(), [](TestFunc<input_data> i, TestFunc<input_data> j) { return (i.elapsed < j.elapsed);});
+        
+        for (auto& test : tests) {
+            std::cout << test.get_label() << "\t";
+            printf("\t%lu (%d)", test.elapsed, test.result);
+            std::cout << std::endl;
+        }
+    }            
     
 };
 
@@ -180,7 +187,7 @@ struct GenTests {
     
     static void gen(std::vector<TestFunc<input_data>>& tests) {
         tests[index].tf = test_func::template core<param_tuple>::compute;
-        tests[index].label = param_tuple::get_label();
+        tests[index].get_label = test_func::template core<param_tuple>::get_label;
         GenTests<test_func, typename param_tuple::next, index - 1>::gen(tests);
     }
 };
@@ -191,7 +198,7 @@ struct GenTests<test_func, param_tuple, 0> {
     
     static void gen(std::vector<TestFunc<input_data>>& tests) {
         tests[0].tf = test_func::template core<param_tuple>::compute;
-        tests[0].label = param_tuple::get_label();
+        tests[0].get_label = test_func::template core<param_tuple>::get_label;
     }
 };
 

@@ -61,6 +61,7 @@ int main(int argc, char **argv) {
 
 //     array_sum_benchmark->run(count);
     array_mul_benchmark->run(count);
+    array_mul_benchmark->print_results();
 
 //     PairsPrinter<mul_kernels_chunk_sizes_numbers::next, mul_kernels_chunk_sizes_numbers::total - 1>::print();
 

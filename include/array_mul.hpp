@@ -31,6 +31,10 @@ namespace array_mul {
             typedef typename params_tuple::left::left::val chunk_mul;
             static const std::size_t chunk_size = params_tuple::left::right::val;
             static const std::size_t n_chunks = params_tuple::right::val;
+
+            static std::string get_label() {
+                return chunk_mul::get_label() + " with " + std::to_string(n_chunks) + " chunks of " + std::to_string(chunk_size);
+            }
             
             static bool compute(input_data& input) {
 
