@@ -6,6 +6,8 @@
 
 #include "common.hpp"
 
+namespace av_prof {
+
 class Timer
 {
 public:
@@ -218,3 +220,4 @@ struct TestHarness {
 };
 
 
+}

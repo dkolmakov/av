@@ -12,12 +12,6 @@
 #include "array_sum.hpp"
 #include "array_mul.hpp"
 
-#include "sum_simple.hpp"
-#include "sum_unroll.hpp"
-#include "sum_chunked.hpp"
-#include "sum_man_sse.hpp"
-#include "sum_man_avx.hpp"
-
 #include "mul_simple.hpp"
 #include "mul_unroll.hpp"
 #include "mul_old_sse.hpp"
@@ -26,6 +20,8 @@
 #include "mul_sse.hpp"
 
 #include "test_harness.hpp"
+
+using namespace av_prof;
 
 typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
 
