@@ -32,7 +32,7 @@ namespace implementation {
     template <class T, std::size_t chunk_size>
     struct unroll_chunks<T, chunk_size, 0> {
         static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
-            chunk_mul<T, chunk_size>::compute(left[0], right[0]);
+            chunk_mul<T, chunk_size - 1>::compute(left[0], right[0]);
         }
     };
     
@@ -40,7 +40,7 @@ namespace implementation {
     struct unroll_chunks {
         static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
             unroll_chunks<T, chunk_size, index - 1>::compute(left, right);
-            chunk_mul<T, chunk_size>::compute(left[index], right[index]);
+            chunk_mul<T, chunk_size - 1>::compute(left[index], right[index]);
         }
     };
     

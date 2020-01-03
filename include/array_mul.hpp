@@ -26,17 +26,23 @@ namespace array_mul {
         };
         
         
-        template<std::size_t chunk_size, std::size_t n_chunks, template<class TT, std::size_t sz, std::size_t n> class chunk_mul>
+        template<class params_tuple>
         struct core {
+            typedef typename params_tuple::left::left::val chunk_mul;
+            static const std::size_t chunk_size = params_tuple::left::right::val;
+            static const std::size_t n_chunks = params_tuple::right::val;
+            
             static bool compute(input_data& input) {
+
                 const std::size_t portion_size = chunk_size * n_chunks;
+
                 std::size_t count = input.arr.size();
                 std::complex<T> *arr = input.arr.data();
                 
                 std::complex<T> acc[portion_size];
                 const std::size_t to_sum = count - count % portion_size;
                 
-                for (std::size_t i = 0; i < chunk_size; i++)
+                for (std::size_t i = 0; i < portion_size; i++)
                     acc[i] = 1;
                 
                 std::complex<T> *left[n_chunks];
@@ -52,17 +58,17 @@ namespace array_mul {
                     for (std::size_t j = 0; j < n_chunks; j++)
                         right[j] = arr + i + j * chunk_size;
 
-                    chunk_mul<T, chunk_size, n_chunks>::compute(left, right);
+                    chunk_mul::template core<T, chunk_size, n_chunks>::compute(left, right);
                 }
                 asm volatile ("nop;nop;nop;");
                 
                 // Handle the remainder
                 std::complex<T> result = 1;
-                std::size_t j = 0;
-                for (std::size_t i = to_sum; i < count; i++, j++) {
-                    result *= arr[i] * acc[j];
+                for (std::size_t i = to_sum; i < count; i++) {
+                    result *= arr[i];
                 }
-                for (; j < chunk_size; j++) {
+
+                for (std::size_t j = 0; j < portion_size; j++) {
                     result *= acc[j];
                 }
                 

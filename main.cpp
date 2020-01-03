@@ -27,9 +27,9 @@
 
 #include "test_harness.hpp"
 
-typedef KernelParameters<1, 2, 4, 8, 12, 16, 20, 24, 32, 48, 64> chunk_sizes;
+typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
 
-typedef KernelParameters<1, 2, 4, 8, 12, 16, 20, 24, 32, 48, 64> chunk_numbers;
+typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
 
 // typedef Kernels<sum_simple::chunk_sum, 
 //                 sum_unroll::chunk_sum, 
@@ -46,7 +46,7 @@ typedef Kernels<mul_simple::chunk_mul, mul_unroll::chunk_mul> mul_kernels;
 typedef Pairs<mul_kernels, chunk_sizes> mul_kernels_chunk_sizes;
 typedef Pairs<mul_kernels_chunk_sizes, chunk_numbers> mul_kernels_chunk_sizes_numbers;
 
-typedef TestHarness<array_mul::test_function<double>, mul_kernels, chunk_sizes> array_mul_harness;
+typedef TestHarness<array_mul::test_function<double>, mul_kernels_chunk_sizes_numbers> array_mul_harness;
 typedef array_mul::test_function<double>::input_data array_mul_input;
 
 Benchmark<array_mul_input>* array_mul_benchmark = array_mul_harness::prepare_benchmark("array_mul");                
@@ -57,13 +57,12 @@ int main(int argc, char **argv) {
         return 1;
     
     std::size_t count = atoi(argv[1]);
-
     std::cout << av::inst_set << " instruction set" << std::endl;
 
 //     array_sum_benchmark->run(count);
     array_mul_benchmark->run(count);
 
-    PairsPrinter<mul_kernels_chunk_sizes_numbers::next, mul_kernels_chunk_sizes_numbers::total - 1>::print();
+//     PairsPrinter<mul_kernels_chunk_sizes_numbers::next, mul_kernels_chunk_sizes_numbers::total - 1>::print();
 
     return 0;
 }
