@@ -124,6 +124,7 @@ struct Pairs {
 };
 
 
+
 template<class pairs, std::size_t index>
 struct PairsPrinter {
     static void print() {
@@ -141,7 +142,6 @@ struct PairsPrinter<pairs, 0> {
 
 
 
-
 template<class input_data>
 struct TestFunc {
     bool (*tf)(input_data& input);
@@ -154,7 +154,6 @@ struct TestFunc {
 template<class input_data>
 struct Benchmark {
     std::string label;
-
     std::vector<TestFunc<input_data>> tests;
 
     Benchmark(std::size_t _size, std::string _label) : label(_label), tests(_size) {}
@@ -179,7 +178,6 @@ struct Benchmark {
             std::cout << std::endl;
         }
     }            
-    
 };
 
 

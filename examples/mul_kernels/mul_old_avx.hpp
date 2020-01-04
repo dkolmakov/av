@@ -9,23 +9,73 @@ namespace mul_old {
     
 namespace avx {
 
-    template <class T, std::size_t index>
+    template <class T, std::size_t index, std::size_t step>
     struct unpack;
 
     template <class T>
-    struct unpack<T, 0> {
-        static force_inline void doIt(__m256d *vals, std::complex<T> *arr) {
-            vals[0] = _mm256_loadu_pd((double*)(arr + 0));
+    struct unpack<T, 0, 1> {
+        static force_inline void doIt(__m256d *vals, std::complex<T> **arr) {
+            vals[0] = _mm256_loadu_pd((double*)(arr[0] + 0));
         }
     };
 
     template <class T, std::size_t index>
-    struct unpack {
-        static force_inline void doIt(__m256d *vals, std::complex<T> *arr) {
-            vals[index] = _mm256_loadu_pd((double*)(arr + 2 * index));
-            unpack<T, index - 1>::doIt(vals, arr);
+    struct unpack<T, index, 1> {
+        static force_inline void doIt(__m256d *vals, std::complex<T> **arr) {
+            vals[index] = _mm256_loadu_pd((double*)(arr[0] + 2 * index));
+            unpack<T, index - 1, 1>::doIt(vals, arr);
         }
     };
+
+    template <class T>
+    struct unpack<T, 0, 2> {
+        static force_inline void doIt(__m256d *vals, std::complex<T> **arr) {
+            double *to_load0 = (double*)arr[0];
+            double *to_load1 = (double*)arr[1];
+            vals[0] = _mm256_set_pd(to_load0[0], to_load0[1], to_load1[0], to_load1[1]);
+        }
+    };
+
+    template <class T, std::size_t index, std::size_t step>
+    struct pack;
+
+    template <class T>
+    struct pack<T, 0, 1> {
+        static force_inline void doIt(std::complex<T> **dst, __m256d *acc) {
+            _mm256_storeu_pd((double*)(dst[0] + 2 * 0), acc[0]);
+        }
+    };
+
+    template <class T, std::size_t index>
+    struct pack<T, index, 1> {
+        static force_inline void doIt(std::complex<T> **dst, __m256d *acc) {
+            _mm256_storeu_pd((double*)(dst[0] + 2 * index), acc[index]);
+            pack<T, index - 1, 1>::doIt(dst, acc);
+        }
+    };
+    
+    template <class T>
+    struct pack<T, 0, 2> {
+        static force_inline void doIt(std::complex<T> **dst, __m256d *acc) {
+            double *to_store0 = (double *)dst[0];
+            double *to_store1 = (double *)dst[1];
+            double* result = (double*)acc;
+            to_store0[0] = result[0];
+            to_store0[1] = result[1];
+            to_store1[0] = result[2];
+            to_store1[1] = result[3];
+        }
+    };
+
+//     template <class T>
+//     struct pack<T, 0, 2> {
+//         static force_inline void doIt(std::complex<T> **dst, __m256d *acc) {
+//             std::complex<T> to_store[2];
+//             _mm256_storeu_pd((double*)(to_store), acc[0]);
+//             *(dst[0]) = to_store[0];
+//             *(dst[1]) = to_store[1];
+//         }
+//     };
 
     template <class T, std::size_t index>
     struct multiply;
@@ -82,23 +132,6 @@ namespace avx {
         }
     };
     
-    template <class T, std::size_t index>
-    struct pack;
-
-    template <class T>
-    struct pack<T, 0> {
-        static force_inline void doIt(std::complex<T> *dst, __m256d *acc) {
-            _mm256_storeu_pd((double*)(dst + 2 * 0), acc[0]);
-        }
-    };
-
-    template <class T, std::size_t index>
-    struct pack {
-        static force_inline void doIt(std::complex<T> *dst, __m256d *acc) {
-            _mm256_storeu_pd((double*)(dst + 2 * index), acc[index]);
-            pack<T, index - 1>::doIt(dst, acc);
-        }
-    };
     
 }
 }
