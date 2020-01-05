@@ -55,7 +55,6 @@ namespace array_mul {
 
                 std::complex<T> *right[n_chunks];
                 
-                // Sum by chunks
                 asm volatile ("nop;nop;nop;");
                 for (std::size_t i = 0; i < to_sum; i += portion_size) {
                     
