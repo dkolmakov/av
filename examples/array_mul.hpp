@@ -16,7 +16,7 @@ namespace array_mul {
             
             input_data(std::size_t count) : arr(count), reference(1) {
                 for (size_t i = 0; i < count; i++) {
-                    arr[i] = 1;
+                    arr[i] = 0.95;
                     if ((i % (size_t)(0.1 * count)) == 0) {
                         arr[i] = 1 + i / (size_t)(0.1 * count);
                     }

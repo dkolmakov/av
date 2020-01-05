@@ -4,11 +4,11 @@
 #include <complex>
 
 #include "common.hpp"
-#include "mul_old_avx.hpp"
-#include "mul_old_sse.hpp"
+#include "sum_man_avx.hpp"
+#include "sum_man_sse.hpp"
 
-namespace mul_old {
-    
+namespace sum_man {
+
 namespace impl {
 
 #ifdef __AVX512F__
@@ -22,56 +22,57 @@ namespace impl {
 #endif
     
     template <class T, std::size_t chunk_size, std::size_t step, std::size_t parity_checker = (chunk_size * step) % VALS_PER_OP, std::size_t reg_size = av::SIMD_REG_SIZE>
-    struct chunk_mul;
+    struct chunk_sum;
     
     template <class T, std::size_t chunk_size, std::size_t step>
-    struct chunk_mul<T, chunk_size, step, 0, 32> {
+    struct chunk_sum<T, chunk_size, step, 0, 32> {
         constexpr static std::size_t portion_size = chunk_size * step;
         
         static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
-            __m256d res[portion_size / 2];
-            avx::unpack<T, portion_size / 2 - 1, step>::doIt(res, acc);
+            __m256d dataA[portion_size / VALS_PER_OP];
+            avx::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataA, acc);
+            __m256d dataB[portion_size / VALS_PER_OP];
+            avx::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataB, arr);
+            
+            avx::summation<T, portion_size / VALS_PER_OP - 1>::doIt(dataA, dataB);
 
-            __m256d v0[portion_size / 2];
-            avx::unpack<T, portion_size / 2 - 1, step>::doIt(v0, arr);
-            avx::multiply<T, portion_size / 2 - 1>::doIt(res, v0);
-            
-            avx::pack<T, portion_size / 2 - 1, step>::doIt(acc, res);
+            avx::pack<T, portion_size / VALS_PER_OP - 1, step>::doIt(acc, dataA);
         }
     };
-    
+
     template <class T, std::size_t chunk_size, std::size_t step>
-    struct chunk_mul<T, chunk_size, step, 0, 16> {
+    struct chunk_sum<T, chunk_size, step, 0, 16> {
+        constexpr static std::size_t portion_size = chunk_size * step;
+        
         static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
-            __m128d res[chunk_size];
-            sse::unpack<T, chunk_size - 1, step>::doIt(res, acc);
+            __m128d dataA[portion_size / VALS_PER_OP];
+            sse::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataA, acc);
+            __m128d dataB[portion_size / VALS_PER_OP];
+            sse::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataB, arr);
             
-            __m128d v0[chunk_size];
-            sse::unpack<T, chunk_size - 1, step>::doIt(v0, arr);
-            sse::multiply<T, chunk_size - 1>::doIt(res, v0);
-            
-            sse::pack<T, chunk_size - 1, step>::doIt(acc, res);
+            sse::summation<T, portion_size / VALS_PER_OP - 1>::doIt(dataA, dataB);
+
+            sse::pack<T, portion_size / VALS_PER_OP - 1, step>::doIt(acc, dataA);
         }
     };
     
-    template <class T, std::size_t chunk_size, std::size_t step, std::size_t parity_checker, std::size_t reg_size>
-    struct chunk_mul {
+    template <class T, std::size_t chunk_size, std::size_t step, std::size_t, std::size_t>
+    struct chunk_sum {
         static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
             for (std::size_t i = 0; i < step; i++) {
                 for (std::size_t j = 0; j < chunk_size; j++)
-                    acc[i][j] *= arr[i][j];
+                    acc[i][j] += arr[i][j];
             }
         }
     };
-    
-    
+
     template <class T, std::size_t chunk_size, std::size_t step, std::size_t index>
     struct unroll_chunks;
 
     template <class T, std::size_t chunk_size, std::size_t step>
     struct unroll_chunks<T, chunk_size, step, 0> {
         static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
-            chunk_mul<T, chunk_size, step>::compute(&left[0], &right[0]);
+            chunk_sum<T, chunk_size, step>::compute(&left[0], &right[0]);
         }
     };
     
@@ -79,15 +80,14 @@ namespace impl {
     struct unroll_chunks {
         static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
             unroll_chunks<T, chunk_size, step, index - step>::compute(left, right);
-            chunk_mul<T, chunk_size, step>::compute(&left[index], &right[index]);
+            chunk_sum<T, chunk_size, step>::compute(&left[index], &right[index]);
         }
     };
-    
 }
 
-    struct chunk_mul {
+    struct chunk_sum {
         static std::string get_label() {
-            return "mul_old";
+            return "sum_man";
         }
         
         template <class T, std::size_t chunk_size, std::size_t n_chunks>
@@ -99,6 +99,7 @@ namespace impl {
             }
         };
     };
+   
 }
 
 

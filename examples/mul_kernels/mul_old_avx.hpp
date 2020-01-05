@@ -60,10 +60,10 @@ namespace avx {
             double *to_store0 = (double *)dst[0];
             double *to_store1 = (double *)dst[1];
             double* result = (double*)acc;
-            to_store0[0] = result[0];
-            to_store0[1] = result[1];
-            to_store1[0] = result[2];
-            to_store1[1] = result[3];
+            to_store0[0] = result[1];
+            to_store0[1] = result[0];
+            to_store1[0] = result[3];
+            to_store1[1] = result[2];
         }
     };
 

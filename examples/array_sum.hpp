@@ -63,11 +63,12 @@ namespace array_sum {
                 
                 // Add the remainder
                 std::complex<T> result(0,0);
-                std::size_t j = 0;
-                for (std::size_t i = to_sum; i < count; i++, j++) {
-                    result += arr[i] + acc[j];
+                
+                for (std::size_t i = to_sum; i < count; i++) {
+                    result += arr[i];
                 }
-                for (; j < portion_size; j++) {
+                
+                for (std::size_t j = 0; j < portion_size; j++) {
                     result += acc[j];
                 }
                 

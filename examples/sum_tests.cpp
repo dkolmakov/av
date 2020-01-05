@@ -13,8 +13,7 @@
 #include "sum_simple.hpp"
 #include "sum_unroll.hpp"
 #include "sum_chunked.hpp"
-#include "sum_man_sse.hpp"
-#include "sum_man_avx.hpp"
+#include "sum_man.hpp"
 
 #include "test_harness.hpp"
 
@@ -22,7 +21,7 @@ using namespace av_prof;
 
 typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
 typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
-typedef Kernels<sum_simple::chunk_sum, sum_unroll::chunk_sum> sum_kernels;
+typedef Kernels<sum_simple::chunk_sum, sum_unroll::chunk_sum, sum_man::chunk_sum> sum_kernels;
                 
 typedef Pairs<sum_kernels, chunk_sizes> sum_kernels_chunk_sizes;
 typedef Pairs<sum_kernels_chunk_sizes, chunk_numbers> sum_kernels_chunk_sizes_numbers;
