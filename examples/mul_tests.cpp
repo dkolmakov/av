@@ -38,9 +38,10 @@ int main(int argc, char **argv) {
     
     std::size_t count = atoi(argv[1]);
     std::size_t repeats = atoi(argv[2]);
-    std::cout << av::inst_set << " instruction set" << std::endl;
 
     Benchmark<array_mul_input>* array_mul_benchmark = array_mul_harness::prepare_benchmark("array_mul");
+    
+    std::cout << av::inst_set << " instruction set" << std::endl;
     
     for (std::size_t i = 0; i < repeats; i++)
         array_mul_benchmark->run(count);

@@ -27,36 +27,38 @@ namespace impl {
     template <class T, std::size_t chunk_size, std::size_t step>
     struct chunk_mul<T, chunk_size, step, 0, 32> {
         constexpr static std::size_t portion_size = chunk_size * step;
+        constexpr static std::size_t vectors_number = portion_size / VALS_PER_OP;
         
         static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
-            __m256d realA[portion_size / 4];
-            __m256d imagA[portion_size / 4]; 
-            avx::unpack<T, portion_size / 4 - 1, step>::doIt(realA, imagA, acc);
+            __m256d realA[vectors_number];
+            __m256d imagA[vectors_number]; 
+            avx::unpack<T, vectors_number - 1, step>::doIt(realA, imagA, acc);
             
-            __m256d realB[portion_size / 4];
-            __m256d imagB[portion_size / 4];
-            avx::unpack<T, portion_size / 4 - 1, step>::doIt(realB, imagB, arr);
+            __m256d realB[vectors_number];
+            __m256d imagB[vectors_number];
+            avx::unpack<T, vectors_number - 1, step>::doIt(realB, imagB, arr);
 
-            avx::multiply<T, portion_size / 4 - 1>::compute(realA, imagA, realB, imagB);
-            avx::pack<T, portion_size / 4 - 1, step>::doIt(realA, imagA, acc);
+            avx::multiply<T, vectors_number - 1>::compute(realA, imagA, realB, imagB);
+            avx::pack<T, vectors_number - 1, step>::doIt(realA, imagA, acc);
         }
     };
 
     template <class T, std::size_t chunk_size, std::size_t step>
     struct chunk_mul<T, chunk_size, step, 0, 16> {
         constexpr static std::size_t portion_size = chunk_size * step;
+        constexpr static std::size_t vectors_number = portion_size / VALS_PER_OP;
         
         static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
-            __m128d realA[portion_size / 2];
-            __m128d imagA[portion_size / 2]; 
-            sse::unpack<T, portion_size / 2 - 1, step>::doIt(realA, imagA, acc);
+            __m128d realA[vectors_number];
+            __m128d imagA[vectors_number]; 
+            sse::unpack<T, vectors_number - 1, step>::doIt(realA, imagA, acc);
             
-            __m128d realB[portion_size / 2];
-            __m128d imagB[portion_size / 2];
-            sse::unpack<T, portion_size / 2 - 1, step>::doIt(realB, imagB, arr);
+            __m128d realB[vectors_number];
+            __m128d imagB[vectors_number];
+            sse::unpack<T, vectors_number - 1, step>::doIt(realB, imagB, arr);
 
-            sse::multiply<T, portion_size / 2 - 1>::compute(realA, imagA, realB, imagB);
-            sse::pack<T, portion_size / 2 - 1, step>::doIt(realA, imagA, acc);
+            sse::multiply<T, vectors_number - 1>::compute(realA, imagA, realB, imagB);
+            sse::pack<T, vectors_number - 1, step>::doIt(realA, imagA, acc);
         }
     };
     

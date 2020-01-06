@@ -89,15 +89,15 @@ namespace avx {
             double *to_store1 = (double *)acc[1];
             double *real = (double *)realA;
             double *imag = (double *)imagA;
-            to_store0[0] = real[0];
-            to_store0[1] = imag[0];
-            to_store0[2] = real[1];
-            to_store0[3] = imag[1];
+            to_store0[0] = real[3];
+            to_store0[1] = imag[3];
+            to_store0[2] = real[2];
+            to_store0[3] = imag[2];
 
-            to_store1[0] = real[2];
-            to_store1[1] = imag[2];
-            to_store1[2] = real[3];
-            to_store1[3] = imag[3];
+            to_store1[0] = real[1];
+            to_store1[1] = imag[1];
+            to_store1[2] = real[0];
+            to_store1[3] = imag[0];
         }
     };
 
@@ -110,15 +110,15 @@ namespace avx {
             double *to_store3 = (double *)acc[3];
             double* real = (double*)realA;
             double* imag = (double*)imagA;
-            to_store0[0] = real[0];
-            to_store0[1] = imag[0];
-            to_store1[0] = real[1];
-            to_store1[1] = imag[1];
+            to_store0[0] = real[3];
+            to_store0[1] = imag[3];
+            to_store1[0] = real[2];
+            to_store1[1] = imag[2];
 
-            to_store2[0] = real[2];
-            to_store2[1] = imag[2];
-            to_store3[0] = real[3];
-            to_store3[1] = imag[3];
+            to_store2[0] = real[1];
+            to_store2[1] = imag[1];
+            to_store3[0] = real[0];
+            to_store3[1] = imag[0];
         }
     };
     

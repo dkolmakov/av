@@ -2,6 +2,7 @@
 
 #include <complex>
 #include <vector>
+#include <random>
 
 #include "common.hpp"
 
@@ -12,14 +13,16 @@ namespace array_mul {
 
         struct input_data {
             std::vector<std::complex<T>> arr;
-            std::complex<T> reference;
+            std::complex<T> reference = 1;
             
-            input_data(std::size_t count) : arr(count), reference(1) {
+            input_data(std::size_t count) : arr(count) {
                 for (size_t i = 0; i < count; i++) {
-                    arr[i] = 0.95;
-                    if ((i % (size_t)(0.1 * count)) == 0) {
-                        arr[i] = 1 + i / (size_t)(0.1 * count);
+                    arr[i] = 1;
+                    
+                    if (i < 9 || i == (count - 1)) {
+                        arr[i] = {(double)(i+1), (double)(i)};
                     }
+                    
                     reference *= arr[i];
                 }
             }
@@ -67,6 +70,7 @@ namespace array_mul {
                 
                 // Handle the remainder
                 std::complex<T> result = 1;
+
                 for (std::size_t i = to_sum; i < count; i++) {
                     result *= arr[i];
                 }
@@ -78,7 +82,6 @@ namespace array_mul {
                 return abs(result - input.reference) < 1e-6;
             }
         };
-        
     };
 }
 

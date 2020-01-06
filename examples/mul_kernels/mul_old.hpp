@@ -27,30 +27,35 @@ namespace impl {
     template <class T, std::size_t chunk_size, std::size_t step>
     struct chunk_mul<T, chunk_size, step, 0, 32> {
         constexpr static std::size_t portion_size = chunk_size * step;
+        constexpr static std::size_t vectors_number = portion_size / VALS_PER_OP;
         
         static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
-            __m256d res[portion_size / 2];
-            avx::unpack<T, portion_size / 2 - 1, step>::doIt(res, acc);
+            __m256d res[vectors_number];
+            avx::unpack<T, vectors_number - 1, step>::doIt(res, acc);
 
-            __m256d v0[portion_size / 2];
-            avx::unpack<T, portion_size / 2 - 1, step>::doIt(v0, arr);
-            avx::multiply<T, portion_size / 2 - 1>::doIt(res, v0);
+            __m256d v0[vectors_number];
+            avx::unpack<T, vectors_number - 1, step>::doIt(v0, arr);
+            avx::multiply<T, vectors_number - 1>::doIt(res, v0);
             
-            avx::pack<T, portion_size / 2 - 1, step>::doIt(acc, res);
+            avx::pack<T, vectors_number - 1, step>::doIt(acc, res);
         }
     };
     
     template <class T, std::size_t chunk_size, std::size_t step>
     struct chunk_mul<T, chunk_size, step, 0, 16> {
+        constexpr static std::size_t portion_size = chunk_size * step;
+        constexpr static std::size_t vectors_number = portion_size / VALS_PER_OP;
+        
         static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
-            __m128d res[chunk_size];
-            sse::unpack<T, chunk_size - 1, step>::doIt(res, acc);
-            
-            __m128d v0[chunk_size];
-            sse::unpack<T, chunk_size - 1, step>::doIt(v0, arr);
-            sse::multiply<T, chunk_size - 1>::doIt(res, v0);
-            
-            sse::pack<T, chunk_size - 1, step>::doIt(acc, res);
+            __m128d res[vectors_number];
+            sse::unpack<T, vectors_number - 1, step>::doIt(res, acc);
+
+            __m128d v0[vectors_number];
+            sse::unpack<T, vectors_number - 1, step>::doIt(v0, arr);
+
+            sse::multiply<T, vectors_number - 1>::doIt(res, v0);
+
+            sse::pack<T, vectors_number - 1, step>::doIt(acc, res);
         }
     };
     
