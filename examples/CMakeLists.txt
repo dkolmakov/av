@@ -30,3 +30,13 @@ target_link_libraries(mul_tests_none avprof mul_kernels)
 target_link_libraries(mul_tests_sse avprof mul_kernels)
 target_link_libraries(mul_tests_avx avprof mul_kernels)
 
+
+add_executable(matrix_none matrix_mul_tests.cpp)
+add_executable(matrix_sse matrix_mul_tests.cpp)
+set_target_properties(matrix_sse PROPERTIES COMPILE_FLAGS "-msse4.2")
+add_executable(matrix_avx matrix_mul_tests.cpp)
+set_target_properties(matrix_avx PROPERTIES COMPILE_FLAGS "-mavx2")
+
+target_link_libraries(matrix_none avprof mul_kernels sum_kernels)
+target_link_libraries(matrix_sse avprof mul_kernels sum_kernels)
+target_link_libraries(matrix_avx avprof mul_kernels sum_kernels)
