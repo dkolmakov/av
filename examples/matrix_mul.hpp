@@ -20,10 +20,8 @@ namespace matrix_mul {
             
             input_data(std::size_t _count) : count(_count), first(count * count), second(count * count), reference(count * count) {
                 for (size_t i = 0; i < count * count; i++) {
-//                     first[i] = {(double)(std::rand()) / RAND_MAX, (double)(std::rand()) / RAND_MAX};
-//                     second[i] = {(double)(std::rand()) / RAND_MAX, (double)(std::rand()) / RAND_MAX};
-                    first[i] = 1;
-                    second[i] = i % count;
+                    first[i] = {(double)(std::rand()) / RAND_MAX, (double)(std::rand()) / RAND_MAX};
+                    second[i] = {(double)(std::rand()) / RAND_MAX, (double)(std::rand()) / RAND_MAX};
                 }
                 
                 for (size_t i = 0; i < count; i++) {
@@ -75,22 +73,7 @@ namespace matrix_mul {
                     }
                     
                     chunk_mul::template core<T, chunk_size, n_chunks>::compute(mul_acc, mul_left, mul_right);
-
-//                     for (std::size_t j = 0; j < n_chunks; j++) {
-//                         for (std::size_t k = 0; k < chunk_size; k++) {
-//                             std::cout << mul_right[j][k] << " ";
-//                         }
-//                     }
-//                     std::cout << std::endl;
-
                     chunk_sum::template core<T, chunk_size, n_chunks>::compute(sum_acc, sum_acc, mul_acc);
-
-//                     for (std::size_t j = 0; j < n_chunks; j++) {
-//                         for (std::size_t k = 0; k < chunk_size; k++) {
-//                             std::cout << sum_acc[j][k] << " ";
-//                         }
-//                     }
-//                     std::cout << std::endl;
                 }
                 asm volatile ("nop;nop;nop;");
                 
@@ -122,11 +105,7 @@ namespace matrix_mul {
                 }
                 
                 bool result = true;
-//                 std::cout << " Result " << std::endl;
                 for (size_t i = 0; i < count * count; i++) {
-//                     std::cout << third[i] << "(" << input.reference[i] << ") ";
-//                     if ((i + 1) % count == 0)
-//                         std::cout << std::endl;
                     result = result && (abs(third[i] - input.reference[i]) < 1e-6);
                 }
                 return result;
