@@ -4,6 +4,7 @@
 #include <complex>
 
 #include "common.hpp"
+#include "sum_simple.hpp"
 #include "sum_man_avx.hpp"
 #include "sum_man_sse.hpp"
 
@@ -28,11 +29,11 @@ namespace impl {
     struct chunk_sum<T, chunk_size, step, 0, 32> {
         constexpr static std::size_t portion_size = chunk_size * step;
         
-        static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
+        static force_inline void compute(std::complex<T> **acc, std::complex<T> **left, std::complex<T> **right) {
             __m256d dataA[portion_size / VALS_PER_OP];
-            avx::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataA, acc);
+            avx::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataA, left);
             __m256d dataB[portion_size / VALS_PER_OP];
-            avx::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataB, arr);
+            avx::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataB, right);
             
             avx::summation<T, portion_size / VALS_PER_OP - 1>::doIt(dataA, dataB);
 
@@ -44,11 +45,11 @@ namespace impl {
     struct chunk_sum<T, chunk_size, step, 0, 16> {
         constexpr static std::size_t portion_size = chunk_size * step;
         
-        static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
+        static force_inline void compute(std::complex<T> **acc, std::complex<T> **left, std::complex<T> **right) {
             __m128d dataA[portion_size / VALS_PER_OP];
-            sse::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataA, acc);
+            sse::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataA, left);
             __m128d dataB[portion_size / VALS_PER_OP];
-            sse::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataB, arr);
+            sse::unpack<T, portion_size / VALS_PER_OP - 1, step>::doIt(dataB, right);
             
             sse::summation<T, portion_size / VALS_PER_OP - 1>::doIt(dataA, dataB);
 
@@ -58,11 +59,8 @@ namespace impl {
     
     template <class T, std::size_t chunk_size, std::size_t step, std::size_t, std::size_t>
     struct chunk_sum {
-        static force_inline void compute(std::complex<T> **acc, std::complex<T> **arr) {
-            for (std::size_t i = 0; i < step; i++) {
-                for (std::size_t j = 0; j < chunk_size; j++)
-                    acc[i][j] += arr[i][j];
-            }
+        static force_inline void compute(std::complex<T> **acc, std::complex<T> **left, std::complex<T> **right) {
+            sum_simple::chunk_sum::core<T, chunk_size, step>::compute(acc, left, right);
         }
     };
 
@@ -71,16 +69,16 @@ namespace impl {
 
     template <class T, std::size_t chunk_size, std::size_t step>
     struct unroll_chunks<T, chunk_size, step, 0> {
-        static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
-            chunk_sum<T, chunk_size, step>::compute(&left[0], &right[0]);
+        static force_inline void compute(std::complex<T> **acc, std::complex<T> **left, std::complex<T> **right) {
+            chunk_sum<T, chunk_size, step>::compute(&acc[0], &left[0], &right[0]);
         }
     };
     
     template <class T, std::size_t chunk_size, std::size_t step, std::size_t index>
     struct unroll_chunks {
-        static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
-            unroll_chunks<T, chunk_size, step, index - step>::compute(left, right);
-            chunk_sum<T, chunk_size, step>::compute(&left[index], &right[index]);
+        static force_inline void compute(std::complex<T> **acc, std::complex<T> **left, std::complex<T> **right) {
+            unroll_chunks<T, chunk_size, step, index - step>::compute(acc, left, right);
+            chunk_sum<T, chunk_size, step>::compute(&acc[index], &left[index], &right[index]);
         }
     };
 }
@@ -94,8 +92,8 @@ namespace impl {
         struct core {
             constexpr static std::size_t step = (chunk_size < impl::VALS_PER_OP && (impl::VALS_PER_OP % chunk_size == 0) && (n_chunks % (impl::VALS_PER_OP / chunk_size)  == 0)) ? impl::VALS_PER_OP / chunk_size : 1;
             
-            static force_inline void compute(std::complex<T> **left, std::complex<T> **right) {
-                impl::unroll_chunks<T, chunk_size, step, n_chunks - step>::compute(left, right);
+            static force_inline void compute(std::complex<T> **acc, std::complex<T> **left, std::complex<T> **right) {
+                impl::unroll_chunks<T, chunk_size, step, n_chunks - step>::compute(acc, left, right);
             }
         };
     };

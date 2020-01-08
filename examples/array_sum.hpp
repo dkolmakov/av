@@ -57,7 +57,7 @@ namespace array_sum {
                     for (std::size_t j = 0; j < n_chunks; j++)
                         right[j] = arr + i + j * chunk_size;
 
-                    chunk_sum::template core<T, chunk_size, n_chunks>::compute(left, right);
+                    chunk_sum::template core<T, chunk_size, n_chunks>::compute(left, left, right);
                 }
                 asm volatile ("nop;nop;nop;");
                 
