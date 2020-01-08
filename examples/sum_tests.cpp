@@ -12,7 +12,6 @@
 #include "array_sum.hpp"
 #include "sum_simple.hpp"
 #include "sum_unroll.hpp"
-#include "sum_chunked.hpp"
 #include "sum_man.hpp"
 
 #include "test_harness.hpp"

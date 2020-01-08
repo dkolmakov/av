@@ -13,7 +13,6 @@
 
 #include "sum_simple.hpp"
 #include "sum_unroll.hpp"
-#include "sum_chunked.hpp"
 #include "sum_man.hpp"
 
 #include "matrix_mul.hpp"
@@ -21,7 +20,7 @@
 using namespace av_prof;
 
 typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
-typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
+typedef KernelParameters<1, 2, 4> chunk_numbers;
 typedef Kernels<mul_simple::chunk_mul, 
                 mul_unroll::chunk_mul, 
                 mul_man::chunk_mul, 
