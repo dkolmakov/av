@@ -54,8 +54,6 @@ int main(int argc, char **argv) {
     
     matrix_mul_benchmark->print_results();
 
-//     PairsPrinter<mul_kernels_chunk_sizes_numbers::next, mul_kernels_chunk_sizes_numbers::total - 1>::print();
-
     delete matrix_mul_benchmark;
     return 0;
 }
