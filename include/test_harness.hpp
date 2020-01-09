@@ -125,6 +125,50 @@ struct Pairs {
 
 
 
+template<std::size_t index, class elem, class ... elems>
+struct CombinationsInt {
+    typedef Pairs<elem, typename CombinationsInt<index + 1, elems...>::val> val;
+    static const std::size_t total = val::total;
+};
+
+template<std::size_t index, class elem>
+struct CombinationsInt<index, elem> {
+    typedef elem val;
+    static const std::size_t total = index + 1;
+};
+
+template<class ... elems>
+struct Combinations {
+    typedef typename CombinationsInt<0, elems...>::val val;
+    static const std::size_t total = val::total;
+};
+
+
+template<class tuple, bool is_first, std::size_t index>
+struct ByIndexInt;
+
+template<class tuple>
+struct ByIndexInt<tuple, true, 0> {
+    typedef tuple elem;
+};
+
+template<class tuple>
+struct ByIndexInt<tuple, false, 0> {
+    typedef typename tuple::left elem;
+};
+
+template<class tuple, bool is_first, std::size_t index>
+struct ByIndexInt {
+    typedef typename ByIndexInt<typename tuple::right, is_first, index - 1>::elem elem;
+};
+
+template<class tuple, std::size_t index, std::size_t size>
+struct ByIndex {
+    typedef typename ByIndexInt<tuple, index == size - 1, index>::elem elem;
+};
+
+
+
 template<class pairs, std::size_t index>
 struct PairsPrinter {
     static void print() {

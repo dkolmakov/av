@@ -20,7 +20,7 @@
 using namespace av_prof;
 
 typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
-typedef KernelParameters<1, 2, 4> chunk_numbers;
+typedef KernelParameters<8> chunk_numbers;
 typedef Kernels<mul_simple::chunk_mul, 
                 mul_unroll::chunk_mul, 
                 mul_man::chunk_mul, 
@@ -28,12 +28,9 @@ typedef Kernels<mul_simple::chunk_mul,
 typedef Kernels<sum_simple::chunk_sum, 
                 sum_unroll::chunk_sum, 
                 sum_man::chunk_sum> sum_kernels;
+typedef Combinations<mul_kernels, sum_kernels, chunk_sizes, chunk_numbers> tuples;
 
-typedef Pairs<mul_kernels, sum_kernels> mul_sum_kernels;
-typedef Pairs<mul_sum_kernels, chunk_sizes> mul_sum_kernels_chunk_sizes;
-typedef Pairs<mul_sum_kernels_chunk_sizes, chunk_numbers> mul_sum_kernels_chunk_sizes_numbers;
-
-typedef TestHarness<matrix_mul::test_function<double>, mul_sum_kernels_chunk_sizes_numbers> matrix_mul_harness;
+typedef TestHarness<matrix_mul::test_function<double>, tuples::val> matrix_mul_harness;
 typedef matrix_mul::test_function<double>::input_data matrix_mul_input;
 
 
