@@ -37,10 +37,10 @@ namespace matrix_mul {
         
         template<class params_tuple>
         struct core {
-            typedef typename av_prof::ByIndex<params_tuple, 0, 4>::elem::val chunk_mul;
-            typedef typename av_prof::ByIndex<params_tuple, 1, 4>::elem::val chunk_sum;
-            static const std::size_t chunk_size = av_prof::ByIndex<params_tuple, 2, 4>::elem::val;
-            static const std::size_t n_chunks = av_prof::ByIndex<params_tuple, 3, 4>::elem::val;
+            typedef typename av_prof::ByIndex<params_tuple, 0>::elem::val chunk_mul;
+            typedef typename av_prof::ByIndex<params_tuple, 1>::elem::val chunk_sum;
+            static const std::size_t chunk_size = av_prof::ByIndex<params_tuple, 2>::elem::val;
+            static const std::size_t n_chunks = av_prof::ByIndex<params_tuple, 3>::elem::val;
             static const std::size_t portion_size = chunk_size * n_chunks;
 
             static std::string get_label() {

@@ -123,7 +123,7 @@ struct Pairs {
     static const std::size_t total = kernels::total * params::total;
 };
 
-
+typedef Kernels<std::nullptr_t> ListTerminator;
 
 template<std::size_t index, class elem, class ... elems>
 struct CombinationsInt {
@@ -133,7 +133,7 @@ struct CombinationsInt {
 
 template<std::size_t index, class elem>
 struct CombinationsInt<index, elem> {
-    typedef elem val;
+    typedef Pairs<elem, ListTerminator> val;
     static const std::size_t total = index + 1;
 };
 
@@ -144,29 +144,18 @@ struct Combinations {
 };
 
 
-template<class tuple, bool is_first, std::size_t index>
-struct ByIndexInt;
+template<class tuple, std::size_t index>
+struct ByIndex;
 
 template<class tuple>
-struct ByIndexInt<tuple, true, 0> {
-    typedef tuple elem;
-};
-
-template<class tuple>
-struct ByIndexInt<tuple, false, 0> {
+struct ByIndex<tuple, 0> {
     typedef typename tuple::left elem;
 };
 
-template<class tuple, bool is_first, std::size_t index>
-struct ByIndexInt {
-    typedef typename ByIndexInt<typename tuple::right, is_first, index - 1>::elem elem;
-};
-
-template<class tuple, std::size_t index, std::size_t size>
+template<class tuple, std::size_t index>
 struct ByIndex {
-    typedef typename ByIndexInt<tuple, index == size - 1, index>::elem elem;
+    typedef typename ByIndex<typename tuple::right, index - 1>::elem elem;
 };
-
 
 
 template<class pairs, std::size_t index>
