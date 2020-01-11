@@ -24,11 +24,9 @@ typedef Kernels<mul_simple::chunk_mul,
                 mul_unroll::chunk_mul, 
                 mul_man::chunk_mul, 
                 mul_old::chunk_mul> mul_kernels;
+typedef Combinations<mul_kernels, chunk_sizes, chunk_numbers> tuples;
 
-typedef Pairs<mul_kernels, chunk_sizes> mul_kernels_chunk_sizes;
-typedef Pairs<mul_kernels_chunk_sizes, chunk_numbers> mul_kernels_chunk_sizes_numbers;
-
-typedef TestHarness<array_mul::test_function<double>, mul_kernels_chunk_sizes_numbers> array_mul_harness;
+typedef TestHarness<array_mul::test_function<double>, tuples::val> array_mul_harness;
 typedef array_mul::test_function<double>::input_data array_mul_input;
 
 

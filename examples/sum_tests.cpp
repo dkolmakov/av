@@ -21,11 +21,9 @@ using namespace av_prof;
 typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
 typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
 typedef Kernels<sum_simple::chunk_sum, sum_unroll::chunk_sum, sum_man::chunk_sum> sum_kernels;
+typedef Combinations<sum_kernels, chunk_sizes, chunk_numbers> tuples;
                 
-typedef Pairs<sum_kernels, chunk_sizes> sum_kernels_chunk_sizes;
-typedef Pairs<sum_kernels_chunk_sizes, chunk_numbers> sum_kernels_chunk_sizes_numbers;
-                
-typedef TestHarness<array_sum::test_function<double>, sum_kernels_chunk_sizes_numbers> array_sum_harness;
+typedef TestHarness<array_sum::test_function<double>, tuples::val> array_sum_harness;
 typedef array_sum::test_function<double>::input_data array_sum_input;
 
 int main(int argc, char **argv) {
