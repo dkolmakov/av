@@ -5,6 +5,7 @@
 #include <random>
 
 #include "common.hpp"
+#include "test_harness.hpp"
 
 namespace matrix_mul {
 
@@ -108,6 +109,9 @@ namespace matrix_mul {
                 for (size_t i = 0; i < count * count; i++) {
                     result = result && (abs(third[i] - input.reference[i]) < 1e-6);
                 }
+                
+                delete[] third;
+                delete[] acc;
                 return result;
             }
         };
