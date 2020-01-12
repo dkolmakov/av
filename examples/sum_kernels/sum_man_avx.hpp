@@ -32,7 +32,7 @@ namespace avx {
         static force_inline void doIt(__m256d *vals, std::complex<T> **arr) {
             double *to_load0 = (double*)arr[0];
             double *to_load1 = (double*)arr[1];
-            vals[0] = _mm256_set_pd(to_load0[0], to_load0[1], to_load1[0], to_load1[1]);
+            vals[0] = _mm256_setr_pd(to_load0[0], to_load0[1], to_load1[0], to_load1[1]);
         }
     };
 
@@ -60,10 +60,10 @@ namespace avx {
             double *to_store0 = (double *)dst[0];
             double *to_store1 = (double *)dst[1];
             double* result = (double*)acc;
-            to_store0[0] = result[1];
-            to_store0[1] = result[0];
-            to_store1[0] = result[3];
-            to_store1[1] = result[2];
+            to_store0[0] = result[0];
+            to_store0[1] = result[1];
+            to_store1[0] = result[2];
+            to_store1[1] = result[3];
         }
     };
     
