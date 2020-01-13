@@ -82,13 +82,34 @@ struct Kernels {
     static const std::size_t total = next::total;
 };
 
+
+template<class tuple, std::size_t index>
+struct ByIndexInt;
+
+template<class tuple>
+struct ByIndexInt<tuple, 0> {
+    typedef typename tuple::left elem;
+};
+
+template<class tuple, std::size_t index>
+struct ByIndexInt {
+    typedef typename ByIndexInt<typename tuple::right, index - 1>::elem elem;
+};
+
+
 template<class kernel, class param, class kernels, class params, std::size_t kcounter, std::size_t pcounter>
 struct CountedPairs;
 
 template<class kernel, class param, class kernels, class params>
 struct CountedPairs<kernel, param, kernels, params, 0, 0> {
+    typedef CountedPairs<kernel, param, kernels, params, 0, 0> current;
     typedef kernel left;
     typedef param right;
+    
+    template<std::size_t index>
+    struct ByIndex {
+        typedef typename ByIndexInt<current, index>::elem elem;
+    };
 
     static std::string get_label() {
         return left::get_label() + " with " + right::get_label();
@@ -97,9 +118,15 @@ struct CountedPairs<kernel, param, kernels, params, 0, 0> {
 
 template<class kernel, class param, class kernels, class params, std::size_t kcounter>
 struct CountedPairs<kernel, param, kernels, params, kcounter, 0> {
+    typedef CountedPairs<kernel, param, kernels, params, kcounter, 0> current;
     typedef CountedPairs<typename kernel::next, typename params::next, kernels, params, kcounter - 1, params::total - 1> next;
     typedef kernel left;
     typedef param right;
+
+    template<std::size_t index>
+    struct ByIndex {
+        typedef typename ByIndexInt<current, index>::elem elem;
+    };
 
     static std::string get_label() {
         return left::get_label() + " with " + right::get_label();
@@ -108,9 +135,15 @@ struct CountedPairs<kernel, param, kernels, params, kcounter, 0> {
 
 template<class kernel, class param, class kernels, class params, std::size_t kcounter, std::size_t pcounter>
 struct CountedPairs {
+    typedef CountedPairs<kernel, param, kernels, params, kcounter, pcounter> current;
     typedef CountedPairs<kernel, typename param::next, kernels, params, kcounter, pcounter - 1> next;
     typedef kernel left;
     typedef param right;
+
+    template<std::size_t index>
+    struct ByIndex {
+        typedef typename ByIndexInt<current, index>::elem elem;
+    };
 
     static std::string get_label() {
         return left::get_label() + " with " + right::get_label();
@@ -137,25 +170,13 @@ struct CombinationsInt<index, elem> {
     static const std::size_t total = index + 1;
 };
 
+
 template<class ... elems>
 struct Combinations {
     typedef typename CombinationsInt<0, elems...>::val val;
     static const std::size_t total = val::total;
 };
 
-
-template<class tuple, std::size_t index>
-struct ByIndex;
-
-template<class tuple>
-struct ByIndex<tuple, 0> {
-    typedef typename tuple::left elem;
-};
-
-template<class tuple, std::size_t index>
-struct ByIndex {
-    typedef typename ByIndex<typename tuple::right, index - 1>::elem elem;
-};
 
 
 template<class pairs, std::size_t index>

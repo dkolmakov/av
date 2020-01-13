@@ -1,9 +1,10 @@
 #pragma once
 
 #include <complex>
+#include <vector>
+#include <random>
 
 #include "common.hpp"
-#include "test_harness.hpp"
 
 namespace array_sum {
 
@@ -27,14 +28,14 @@ namespace array_sum {
         
         template<class params_tuple>
         struct core {
-            typedef typename av_prof::ByIndex<params_tuple, 0>::elem::val chunk_sum;
-            static const std::size_t chunk_size = av_prof::ByIndex<params_tuple, 1>::elem::val;
-            static const std::size_t n_chunks = av_prof::ByIndex<params_tuple, 2>::elem::val;
+            typedef typename params_tuple::template ByIndex<0>::elem::val chunk_sum;
+            static const std::size_t chunk_size = params_tuple::template ByIndex<1>::elem::val;
+            static const std::size_t n_chunks = params_tuple::template ByIndex<2>::elem::val;
 
             static std::string get_label() {
                 return chunk_sum::get_label() + " with " + std::to_string(n_chunks) + " chunks of " + std::to_string(chunk_size);
             }
-            
+
             static bool compute(input_data& input) {
                 const std::size_t portion_size = chunk_size * n_chunks;
 

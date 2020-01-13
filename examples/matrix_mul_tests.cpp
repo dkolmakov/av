@@ -4,8 +4,6 @@
 #include <array>
 #include <vector>
 
-#include "test_harness.hpp"
-
 #include "mul_simple.hpp"
 #include "mul_unroll.hpp"
 #include "mul_old.hpp"
@@ -17,10 +15,12 @@
 
 #include "matrix_mul.hpp"
 
+#include "test_harness.hpp"
+
 using namespace av_prof;
 
 typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
-typedef KernelParameters<8> chunk_numbers;
+typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
 typedef Kernels<mul_simple::chunk_mul, 
                 mul_unroll::chunk_mul, 
                 mul_man::chunk_mul, 
