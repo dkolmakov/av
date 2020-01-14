@@ -17,7 +17,7 @@
 
 #include "test_harness.hpp"
 
-using namespace av_prof;
+using namespace av;
 
 typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
 typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
