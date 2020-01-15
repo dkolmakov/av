@@ -18,8 +18,8 @@
 
 using namespace av;
 
-typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
-typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
+typedef KernelParameters<std::size_t, 1, 2, 4, 8, 16, 32> chunk_sizes;
+typedef KernelParameters<std::size_t, 1, 2, 4, 8> chunk_numbers;
 typedef Kernels<sum_simple::chunk_sum, sum_unroll::chunk_sum, sum_man::chunk_sum> sum_kernels;
 typedef Combinations<sum_kernels, chunk_sizes, chunk_numbers> tuples;
                 

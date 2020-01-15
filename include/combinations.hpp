@@ -8,10 +8,10 @@
 namespace av {
 namespace impl {
     
-template<std::size_t index, std::size_t param, std::size_t... params_left>
+template<class T, std::size_t index, T param, T... params_left>
 struct CountedParams {
-    typedef CountedParams<index + 1, params_left...> next;
-    static const std::size_t val = param;
+    typedef CountedParams<T, index + 1, params_left...> next;
+    static const T val = param;
     static const std::size_t total = next::total;
 
     static std::string get_label() {
@@ -19,9 +19,9 @@ struct CountedParams {
     }
 };
 
-template<std::size_t index, std::size_t param>
-struct CountedParams<index, param> {
-    static const std::size_t val = param;
+template<class T, std::size_t index, T param>
+struct CountedParams<T, index, param> {
+    static const T val = param;
     static const std::size_t total = index + 1;
 
     static std::string get_label() {
@@ -122,9 +122,9 @@ struct CountedPairs {
     }
 };
 
-template<std::size_t... params>
+template<class T, T... params>
 struct KernelParameters {
-    typedef impl::CountedParams<0, params...> next;
+    typedef impl::CountedParams<T, 0, params...> next;
     static const std::size_t total = next::total;
 };
 
@@ -156,9 +156,9 @@ struct CombinationsInt<index, elem> {
 
 }
 
-template<std::size_t... params>
+template<class T, T... params>
 struct KernelParameters {
-    typedef impl::CountedParams<0, params...> next;
+    typedef impl::CountedParams<T, 0, params...> next;
     static const std::size_t total = next::total;
 };
 
@@ -166,12 +166,6 @@ template<class ... kernels>
 struct Kernels {
     typedef impl::CountedKernels<0, kernels...> next;
     static const std::size_t total = next::total;
-};
-
-template<class kernels, class params>
-struct Pairs {
-    typedef impl::CountedPairs<typename kernels::next, typename params::next, kernels, params, kernels::total - 1, params::total - 1> next;
-    static const std::size_t total = kernels::total * params::total;
 };
 
 template<class ... elems>

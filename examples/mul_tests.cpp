@@ -18,8 +18,8 @@
 
 using namespace av;
 
-typedef KernelParameters<1, 2, 4, 8, 16, 32> chunk_sizes;
-typedef KernelParameters<1, 2, 4, 8> chunk_numbers;
+typedef KernelParameters<std::size_t, 1, 2, 4, 8, 16, 32> chunk_sizes;
+typedef KernelParameters<std::size_t, 1, 2, 4, 8> chunk_numbers;
 typedef Kernels<mul_simple::chunk_mul, 
                 mul_unroll::chunk_mul, 
                 mul_man::chunk_mul, 
