@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "combinations.hpp"
+#include "progress_bar.hpp"
 
 namespace av {
 namespace impl {
@@ -67,12 +68,16 @@ struct Benchmark {
 
     void run(std::size_t count) {
         input_data input(count);
+        std::size_t current = 0;
+        ProgressBar<size_t> bar(tests.size(), current);
 
         Timer t;
         for (auto& test : tests) {
             t.reset();
             test.result = test.result && test.tf(input);
             test.elapsed += t.elapsed();
+            
+            bar.show_progress(++current);
         }
     }
     
