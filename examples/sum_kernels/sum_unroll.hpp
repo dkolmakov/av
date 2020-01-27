@@ -31,16 +31,16 @@ namespace implementation {
 
     template <class T, std::size_t chunk_size>
     struct unroll_chunks<T, chunk_size, 0> {
-        static force_inline void compute(std::complex<T> **acc, std::complex<T> **left, std::complex<T> **right) {
-            chunk_sum<T, 2 * chunk_size - 1>::compute((T *)acc[0], (T *)left[0], (T *)right[0]);
+        static force_inline void compute(T **acc, T **left, T **right) {
+            chunk_sum<T, chunk_size - 1>::compute(acc[0], left[0], right[0]);
         }
     };
     
     template <class T, std::size_t chunk_size, std::size_t index>
     struct unroll_chunks {
-        static force_inline void compute(std::complex<T> **acc, std::complex<T> **left, std::complex<T> **right) {
+        static force_inline void compute(T **acc, T **left, T **right) {
             unroll_chunks<T, chunk_size, index - 1>::compute(acc, left, right);
-            chunk_sum<T, 2 * chunk_size - 1>::compute((T *)acc[index], (T *)left[index], (T *)right[index]);
+            chunk_sum<T, chunk_size - 1>::compute(acc[index], left[index], right[index]);
         }
     };    
 }
@@ -52,7 +52,7 @@ namespace implementation {
         
         template <class T, std::size_t chunk_size, std::size_t n_chunks>
         struct core {
-            static force_inline void compute(std::complex<T> **acc, std::complex<T> **left, std::complex<T> **right) {
+            static force_inline void compute(T **acc, T **left, T **right) {
                 implementation::unroll_chunks<T, chunk_size, n_chunks - 1>::compute(acc, left, right);
             }
         };

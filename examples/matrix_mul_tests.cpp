@@ -30,8 +30,9 @@ typedef Kernels<sum_simple::chunk_sum,
                 sum_man::chunk_sum> sum_kernels;
 typedef Combinations<mul_kernels, sum_kernels, chunk_sizes, chunk_numbers> tuples;
 
-typedef TestHarness<matrix_mul::test_function<double>, tuples::val> matrix_mul_harness;
-typedef matrix_mul::test_function<double>::input_data matrix_mul_input;
+typedef matrix_mul::test_function<double> tf;
+typedef TestHarness<tf::core, tf::input_data, tuples::val> matrix_mul_harness;
+typedef tf::input_data matrix_mul_input;
 
 
 int main(int argc, char **argv) {

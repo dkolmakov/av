@@ -26,8 +26,9 @@ typedef Kernels<mul_simple::chunk_mul,
                 mul_old::chunk_mul> mul_kernels;
 typedef Combinations<mul_kernels, chunk_sizes, chunk_numbers> tuples;
 
-typedef TestHarness<array_mul::test_function<double>, tuples::val> array_mul_harness;
-typedef array_mul::test_function<double>::input_data array_mul_input;
+typedef array_mul::test_function<double> tf;
+typedef TestHarness<tf::core, tf::input_data, tuples::val> array_mul_harness;
+typedef tf::input_data array_mul_input;
 
 
 int main(int argc, char **argv) {

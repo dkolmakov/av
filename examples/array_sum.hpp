@@ -8,23 +8,22 @@
 
 namespace array_sum {
 
-    template<class T> 
+    template<class T, T init_value(void)> 
     struct test_function {
 
         struct input_data {
-            std::vector<std::complex<T>> first;
-            std::vector<std::complex<T>> second;
-            std::vector<std::complex<T>> reference;
+            std::vector<T> first;
+            std::vector<T> second;
+            std::vector<T> reference;
             
             input_data(std::size_t count) : first(count), second(count), reference(count) {
                 for (size_t i = 0; i < count; i++) {
-                    first[i] = {(double)(std::rand()) / RAND_MAX, (double)(std::rand()) / RAND_MAX};
-                    second[i] = {(double)(std::rand()) / RAND_MAX, (double)(std::rand()) / RAND_MAX};
+                    first[i] = init_value();
+                    second[i] = init_value();
                     reference[i] = first[i] + second[i];
                 }
             }
         };
-        
         
         template<class params_tuple>
         struct core {
@@ -40,15 +39,15 @@ namespace array_sum {
                 const std::size_t portion_size = chunk_size * n_chunks;
 
                 std::size_t count = input.first.size();
-                std::complex<T> *first = input.first.data();
-                std::complex<T> *second = input.second.data();
-                std::complex<T> *third = new std::complex<T>[count];
+                T *first = input.first.data();
+                T *second = input.second.data();
+                T *third = new T[count];
                 
                 const std::size_t to_sum = count - count % portion_size;
                 
-                std::complex<T> *left[n_chunks];
-                std::complex<T> *right[n_chunks];
-                std::complex<T> *res[n_chunks];
+                T *left[n_chunks];
+                T *right[n_chunks];
+                T *res[n_chunks];
                 
                 // Sum by chunks
                 asm volatile ("nop;nop;nop;");

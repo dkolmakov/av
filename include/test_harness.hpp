@@ -18,24 +18,20 @@ struct TestFunc {
     bool result = true;
 };
 
-template<class test_func, class param_tuple, std::size_t index>
+template<template<class tuple> class test_func, class input_data, class param_tuple, std::size_t index>
 struct GenTests {
-    typedef typename test_func::input_data input_data;
-    
     static void gen(std::vector<TestFunc<input_data>>& tests) {
-        tests[index].tf = test_func::template core<param_tuple>::compute;
-        tests[index].get_label = test_func::template core<param_tuple>::get_label;
-        GenTests<test_func, typename param_tuple::next, index - 1>::gen(tests);
+        tests[index].tf = test_func<param_tuple>::compute;
+        tests[index].get_label = test_func<param_tuple>::get_label;
+        GenTests<test_func, input_data, typename param_tuple::next, index - 1>::gen(tests);
     }
 };
 
-template<class test_func, class param_tuple>
-struct GenTests<test_func, param_tuple, 0> {
-    typedef typename test_func::input_data input_data;
-    
+template<template<class tuple> class test_func, class input_data, class param_tuple>
+struct GenTests<test_func, input_data, param_tuple, 0> {
     static void gen(std::vector<TestFunc<input_data>>& tests) {
-        tests[0].tf = test_func::template core<param_tuple>::compute;
-        tests[0].get_label = test_func::template core<param_tuple>::get_label;
+        tests[0].tf = test_func<param_tuple>::compute;
+        tests[0].get_label = test_func<param_tuple>::get_label;
     }
 };
 
@@ -93,14 +89,12 @@ struct Benchmark {
 };
 
 
-template<class test_func, class param_tuples>
+template<template<class tuple> class test_func, class input_data, class param_tuples>
 struct TestHarness {
-    typedef typename test_func::input_data input_data;
-    
     static Benchmark<input_data>* prepare_benchmark(std::string label) {
         Benchmark<input_data>* bench = new Benchmark<input_data>(param_tuples::total, label);
 
-        impl::GenTests<test_func, typename param_tuples::next, param_tuples::total - 1>::gen(bench->tests);
+        impl::GenTests<test_func, input_data, typename param_tuples::next, param_tuples::total - 1>::gen(bench->tests);
 
         return bench;
     }
