@@ -11,7 +11,7 @@ namespace sum_simple {
             return "sum_simple";
         }
         
-        template <class T, std::size_t chunk_size, std::size_t n_chunks>
+        template <class T, class NotUsed, std::size_t chunk_size, std::size_t n_chunks>
         struct core {
             static force_inline void compute(T **acc, T **left, T **right) {
                 for (std::size_t i = 0; i < n_chunks; i++) {

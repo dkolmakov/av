@@ -25,7 +25,7 @@ typedef Combinations<sum_kernels, chunk_sizes, chunk_numbers> tuples;
                 
 static std::complex<float> init() {return {(float)(std::rand()) / RAND_MAX, (float)(std::rand()) / RAND_MAX};}
 
-typedef array_sum::test_function<std::complex<float>, init> tf;
+typedef array_sum::test_function<std::complex<float>, __m256, init> tf;
 typedef TestHarness<tf::core, tf::input_data, tuples::val> array_sum_harness;
 typedef tf::input_data array_sum_input;
 
