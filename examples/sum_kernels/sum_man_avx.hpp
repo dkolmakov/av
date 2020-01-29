@@ -102,7 +102,7 @@ namespace avx {
             float *to_store1 = (float *)arr1;
             float *to_store2 = (float *)arr2;
             float *to_store3 = (float *)arr3;
-            double* result = (double*)&src;
+            float* result = (float*)&src;
             to_store0[0] = result[0]; to_store0[1] = result[1];
             to_store1[0] = result[2]; to_store1[1] = result[3];
             to_store2[0] = result[4]; to_store2[1] = result[5];
@@ -117,7 +117,7 @@ namespace avx {
             float *to_store5 = (float *)arr5;
             float *to_store6 = (float *)arr6;
             float *to_store7 = (float *)arr7;
-            double* result = (double*)&src;
+            float* result = (float*)&src;
             to_store0[0] = result[0];
             to_store1[0] = result[1];
             to_store2[0] = result[2];
