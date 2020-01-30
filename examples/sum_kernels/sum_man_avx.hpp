@@ -8,11 +8,36 @@
 namespace sum_man {
     
 namespace avx {    
-    template <class Treg>
+
+    template <class T>
+    struct Treg;
+
+    template <>
+    struct Treg<std::complex<double>> {
+        typedef __m256d val;
+    };
+    
+    template <>
+    struct Treg<double> {
+        typedef __m256d val;
+    };
+    
+    template <>
+    struct Treg<std::complex<float>> {
+        typedef __m256 val;
+    };
+    
+    template <>
+    struct Treg<float> {
+        typedef __m256 val;
+    };
+    
+    
+    template <class T>
     struct Ops;
     
     template <>
-    struct Ops<__m256d> {
+    struct Ops<double> {
         static force_inline __m256d unpack(void *arr) {
             double *to_load = (double *)arr;
             return _mm256_loadu_pd(to_load);
@@ -55,9 +80,32 @@ namespace avx {
             to_store3[3] = result[3];
         }        
     };
+
+    template <>
+    struct Ops<std::complex<double>> {
+        static force_inline __m256d unpack(void *arr) {
+            return Ops<double>::unpack(arr);
+        }
+        static force_inline __m256d unpack(void *arr0, void *arr1) {
+            return Ops<double>::unpack(arr0, arr1);
+        }
+        static force_inline __m256d unpack(void *arr0, void *arr1, void *arr2, void *arr3) {
+            return Ops<double>::unpack(arr0, arr1, arr2, arr3);
+        }
+
+        static force_inline void pack( __m256d src, void *arr) {
+            Ops<double>::pack(src, arr);
+        }        
+        static force_inline void pack( __m256d src, void *arr0, void *arr1) {
+            Ops<double>::pack(src, arr0, arr1);
+        }        
+        static force_inline void pack( __m256d src, void *arr0, void *arr1, void *arr2, void *arr3) {
+            Ops<double>::pack(src, arr0, arr1, arr2, arr3);
+        }        
+    };
     
     template <>
-    struct Ops<__m256> {
+    struct Ops<float> {
         static force_inline __m256 unpack(void *arr) {
             float *to_load = (float *)arr;
             return _mm256_loadu_ps(to_load);
@@ -129,90 +177,118 @@ namespace avx {
         }        
     };
 
+    template <>
+    struct Ops<std::complex<float>> {
+        static force_inline __m256 unpack(void *arr) {
+            return Ops<float>::unpack(arr);
+        }
+        static force_inline __m256 unpack(void *arr0, void *arr1) {
+            return Ops<float>::unpack(arr0, arr1);
+        }
+        static force_inline __m256 unpack(void *arr0, void *arr1, void *arr2, void *arr3) {
+            return Ops<float>::unpack(arr0, arr1, arr2, arr3);
+        }
+        static force_inline __m256 unpack(void *arr0, void *arr1, void *arr2, void *arr3, void *arr4, void *arr5, void *arr6, void *arr7) {
+            return Ops<float>::unpack(arr0, arr1, arr2, arr3, arr4, arr5, arr6, arr7);
+        }
+
+        static force_inline void pack( __m256 src, void *arr) {
+            Ops<float>::pack(src, arr);
+        }        
+        static force_inline void pack( __m256 src, void *arr0, void *arr1) {
+            Ops<float>::pack(src, arr0, arr1);
+        }        
+        static force_inline void pack( __m256 src, void *arr0, void *arr1, void *arr2, void *arr3) {
+            Ops<float>::pack(src, arr0, arr1, arr2, arr3);
+        }        
+        static force_inline void pack( __m256 src, void *arr0, void *arr1, void *arr2, void *arr3, void *arr4, void *arr5, void *arr6, void *arr7) {
+            Ops<float>::pack(src, arr0, arr1, arr2, arr3, arr4, arr5, arr6, arr7);
+        }        
+    };
     
-    template <class T, class Treg, std::size_t index, std::size_t chunks>
+    template <class T, std::size_t index, std::size_t chunks>
     struct unpack;
 
-    template <class T, class Treg>
-    struct unpack<T, Treg, 0, 1> {
+    template <class T>
+    struct unpack<T, 0, 1> {
         constexpr static std::size_t vals_per_chunk = 32 / sizeof(T);
         
-        static force_inline void doIt(Treg *vals, T **arr) {
-            vals[0] = Ops<Treg>::unpack(arr[0] + 0 * vals_per_chunk);
+        static force_inline void doIt(typename Treg<T>::val *vals, T **arr) {
+            vals[0] = Ops<T>::unpack(arr[0] + 0 * vals_per_chunk);
         }
     };
 
-    template <class T, class Treg, std::size_t index>
-    struct unpack<T, Treg, index, 1> {
+    template <class T, std::size_t index>
+    struct unpack<T, index, 1> {
         constexpr static std::size_t vals_per_chunk = 32 / sizeof(T);
         
-        static force_inline void doIt(Treg *vals, T **arr) {
-            vals[index] = Ops<Treg>::unpack(arr[0] + index * vals_per_chunk);
-            unpack<T, Treg, index - 1, 1>::doIt(vals, arr);
+        static force_inline void doIt(typename Treg<T>::val *vals, T **arr) {
+            vals[index] = Ops<T>::unpack(arr[0] + index * vals_per_chunk);
+            unpack<T, index - 1, 1>::doIt(vals, arr);
         }
     };
 
-    template <class T, class Treg>
-    struct unpack<T, Treg, 0, 2> {
-        static force_inline void doIt(Treg *vals, T **arr) {
-            vals[0] = Ops<Treg>::unpack(arr[0], arr[1]);
+    template <class T>
+    struct unpack<T, 0, 2> {
+        static force_inline void doIt(typename Treg<T>::val *vals, T **arr) {
+            vals[0] = Ops<T>::unpack(arr[0], arr[1]);
         }
     };
 
-    template <class T, class Treg>
-    struct unpack<T, Treg, 0, 4> {
-        static force_inline void doIt(Treg *vals, T **arr) {
-            vals[0] = Ops<Treg>::unpack(arr[0], arr[1], arr[2], arr[3]);
+    template <class T>
+    struct unpack<T, 0, 4> {
+        static force_inline void doIt(typename Treg<T>::val *vals, T **arr) {
+            vals[0] = Ops<T>::unpack(arr[0], arr[1], arr[2], arr[3]);
         }
     };
     
-    template <class T, class Treg>
-    struct unpack<T, Treg, 0, 8> {
-        static force_inline void doIt(Treg *vals, T **arr) {
-            vals[0] = Ops<Treg>::unpack(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7]);
+    template <class T>
+    struct unpack<T, 0, 8> {
+        static force_inline void doIt(typename Treg<T>::val *vals, T **arr) {
+            vals[0] = Ops<T>::unpack(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7]);
         }
     };
     
-    template <class T, class Treg, std::size_t index, std::size_t step>
+    template <class T, std::size_t index, std::size_t step>
     struct pack;
 
-    template <class T, class Treg>
-    struct pack<T, Treg, 0, 1> {
+    template <class T>
+    struct pack<T, 0, 1> {
         constexpr static std::size_t vals_per_chunk = 32 / sizeof(T);
         
-        static force_inline void doIt(T **dst, Treg *acc) {
-            Ops<Treg>::pack(acc[0], dst[0] + 0 * vals_per_chunk);
+        static force_inline void doIt(T **dst, typename Treg<T>::val *acc) {
+            Ops<T>::pack(acc[0], dst[0] + 0 * vals_per_chunk);
         }
     };
 
-    template <class T, class Treg, std::size_t index>
-    struct pack<T, Treg, index, 1> {
+    template <class T, std::size_t index>
+    struct pack<T, index, 1> {
         constexpr static std::size_t vals_per_chunk = 32 / sizeof(T);
         
-        static force_inline void doIt(T **dst, Treg *acc) {
-            Ops<Treg>::pack(acc[index], dst[0] + index * vals_per_chunk);
-            pack<T, Treg, index - 1, 1>::doIt(dst, acc);
+        static force_inline void doIt(T **dst, typename Treg<T>::val *acc) {
+            Ops<T>::pack(acc[index], dst[0] + index * vals_per_chunk);
+            pack<T, index - 1, 1>::doIt(dst, acc);
         }
     };
 
-    template <class T, class Treg>
-    struct pack<T, Treg, 0, 2> {
-        static force_inline void doIt(T **dst, Treg *acc) {
-            Ops<Treg>::pack(acc[0], dst[0], dst[1]);
+    template <class T>
+    struct pack<T, 0, 2> {
+        static force_inline void doIt(T **dst, typename Treg<T>::val *acc) {
+            Ops<T>::pack(acc[0], dst[0], dst[1]);
         }
     };
     
-    template <class T, class Treg>
-    struct pack<T, Treg, 0, 4> {
-        static force_inline void doIt(T **dst, Treg *acc) {
-            Ops<Treg>::pack(acc[0], dst[0], dst[1], dst[2], dst[3]);
+    template <class T>
+    struct pack<T, 0, 4> {
+        static force_inline void doIt(T **dst, typename Treg<T>::val *acc) {
+            Ops<T>::pack(acc[0], dst[0], dst[1], dst[2], dst[3]);
         }
     };
     
-    template <class T, class Treg>
-    struct pack<T, Treg, 0, 8> {
-        static force_inline void doIt(T **dst, Treg *acc) {
-            Ops<Treg>::pack(acc[0], dst[0], dst[1], dst[2], dst[3], dst[4], dst[5], dst[6], dst[7]);
+    template <class T>
+    struct pack<T, 0, 8> {
+        static force_inline void doIt(T **dst, typename Treg<T>::val *acc) {
+            Ops<T>::pack(acc[0], dst[0], dst[1], dst[2], dst[3], dst[4], dst[5], dst[6], dst[7]);
         }
     };
 

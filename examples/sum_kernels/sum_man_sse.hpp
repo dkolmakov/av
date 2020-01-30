@@ -9,6 +9,30 @@ namespace sum_man {
     
 namespace sse {
 
+    template <class T>
+    struct Treg;
+
+    template <>
+    struct Treg<std::complex<double>> {
+        typedef __m128d val;
+    };
+    
+    template <>
+    struct Treg<double> {
+        typedef __m128d val;
+    };
+    
+    template <>
+    struct Treg<std::complex<float>> {
+        typedef __m128 val;
+    };
+    
+    template <>
+    struct Treg<float> {
+        typedef __m128 val;
+    };
+
+    
     template <class T, std::size_t index, std::size_t step>
     struct unpack;
 

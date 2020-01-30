@@ -50,7 +50,7 @@ namespace implementation {
             return "sum_unroll";
         }
         
-        template <class T, class NotUsed, std::size_t chunk_size, std::size_t n_chunks>
+        template <class T, std::size_t chunk_size, std::size_t n_chunks>
         struct core {
             static force_inline void compute(T **acc, T **left, T **right) {
                 implementation::unroll_chunks<T, chunk_size, n_chunks - 1>::compute(acc, left, right);

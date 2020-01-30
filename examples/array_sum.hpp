@@ -8,7 +8,7 @@
 
 namespace array_sum {
 
-    template<class T, class Treg, T init_value(void)> 
+    template<class T, T init_value(void)> 
     struct test_function {
 
         struct input_data {
@@ -58,7 +58,7 @@ namespace array_sum {
                         res[j] = third + i + j * chunk_size;
                     }
 
-                    chunk_sum::template core<T, Treg, chunk_size, n_chunks>::compute(res, left, right);
+                    chunk_sum::template core<T, chunk_size, n_chunks>::compute(res, left, right);
                 }
                 asm volatile ("nop;nop;nop;");
                 
