@@ -38,171 +38,113 @@ namespace avx {
     
     template <>
     struct Ops<double> {
-        static force_inline __m256d unpack(void *arr) {
-            double *to_load = (double *)arr;
-            return _mm256_loadu_pd(to_load);
+        static force_inline __m256d unpack(double *arr) {
+            return _mm256_loadu_pd(arr);
         }
-        static force_inline __m256d unpack(void *arr0, void *arr1) {
-            double *to_load0 = (double *)arr0;
-            double *to_load1 = (double *)arr1;
-            return _mm256_setr_pd(to_load0[0], to_load0[1], to_load1[0], to_load1[1]);
+        static force_inline __m256d unpack(double *arr0, double *arr1) {
+            return _mm256_setr_pd(arr0[0], arr0[1], arr1[0], arr1[1]);
         }
-        static force_inline __m256d unpack(void *arr0, void *arr1, void *arr2, void *arr3) {
-            double *to_load0 = (double *)arr0;
-            double *to_load1 = (double *)arr1;
-            double *to_load2 = (double *)arr2;
-            double *to_load3 = (double *)arr3;
-            return _mm256_setr_pd(to_load0[0], to_load1[0], to_load2[0], to_load3[0]);
+        static force_inline __m256d unpack(double *arr0, double *arr1, double *arr2, double *arr3) {
+            return _mm256_setr_pd(arr0[0], arr1[0], arr2[0], arr3[0]);
         }
 
-        static force_inline void pack( __m256d src, void *arr) {
-            double *to_store = (double *)arr;
-            _mm256_storeu_pd(to_store, src);
+        static force_inline void pack( __m256d src, double *arr) {
+            _mm256_storeu_pd(arr, src);
         }        
-        static force_inline void pack( __m256d src, void *arr0, void *arr1) {
-            double *to_store0 = (double *)arr0;
-            double *to_store1 = (double *)arr1;
+        static force_inline void pack( __m256d src, double *arr0, double *arr1) {
             double* result = (double *)&src;
-            to_store0[0] = result[0];
-            to_store0[1] = result[1];
-            to_store1[0] = result[2];
-            to_store1[1] = result[3];
+            arr0[0] = result[0]; arr0[1] = result[1];
+            arr1[0] = result[2]; arr1[1] = result[3];
         }        
-        static force_inline void pack( __m256d src, void *arr0, void *arr1, void *arr2, void *arr3) {
-            double *to_store0 = (double *)arr0;
-            double *to_store1 = (double *)arr1;
-            double *to_store2 = (double *)arr2;
-            double *to_store3 = (double *)arr3;
+        static force_inline void pack( __m256d src, double *arr0, double *arr1, double *arr2, double *arr3) {
             double* result = (double *)&src;
-            to_store0[0] = result[0];
-            to_store1[0] = result[1];
-            to_store2[0] = result[2];
-            to_store3[0] = result[3];
+            arr0[0] = result[0];
+            arr1[0] = result[1];
+            arr2[0] = result[2];
+            arr3[0] = result[3];
         }        
     };
 
     template <>
     struct Ops<std::complex<double>> {
-        static force_inline __m256d unpack(void *arr) {
-            return Ops<double>::unpack(arr);
+        static force_inline __m256d unpack(std::complex<double> *arr) {
+            return Ops<double>::unpack((double *)arr);
         }
-        static force_inline __m256d unpack(void *arr0, void *arr1) {
-            return Ops<double>::unpack(arr0, arr1);
-        }
-        static force_inline __m256d unpack(void *arr0, void *arr1, void *arr2, void *arr3) {
-            return Ops<double>::unpack(arr0, arr1, arr2, arr3);
+        static force_inline __m256d unpack(std::complex<double> *arr0, std::complex<double> *arr1) {
+            return Ops<double>::unpack((double *)arr0, (double *)arr1);
         }
 
-        static force_inline void pack( __m256d src, void *arr) {
-            Ops<double>::pack(src, arr);
+        static force_inline void pack( __m256d src, std::complex<double> *arr) {
+            Ops<double>::pack(src, (double *)arr);
         }        
-        static force_inline void pack( __m256d src, void *arr0, void *arr1) {
-            Ops<double>::pack(src, arr0, arr1);
-        }        
-        static force_inline void pack( __m256d src, void *arr0, void *arr1, void *arr2, void *arr3) {
-            Ops<double>::pack(src, arr0, arr1, arr2, arr3);
+        static force_inline void pack( __m256d src, std::complex<double> *arr0, std::complex<double> *arr1) {
+            Ops<double>::pack(src, (double *)arr0, (double *)arr1);
         }        
     };
     
     template <>
     struct Ops<float> {
-        static force_inline __m256 unpack(void *arr) {
-            float *to_load = (float *)arr;
-            return _mm256_loadu_ps(to_load);
+        static force_inline __m256 unpack(float *arr) {
+            return _mm256_loadu_ps(arr);
         }
-        static force_inline __m256 unpack(void *arr0, void *arr1) {
-            float *to_load0 = (float *)arr0;
-            float *to_load1 = (float *)arr1;
-            return _mm256_setr_ps(to_load0[0], to_load0[1], to_load0[2], to_load0[3], to_load1[0], to_load1[1], to_load1[2], to_load1[3]);
+        static force_inline __m256 unpack(float *arr0, float *arr1) {
+            return _mm256_setr_ps(arr0[0], arr0[1], arr0[2], arr0[3], arr1[0], arr1[1], arr1[2], arr1[3]);
         }
-        static force_inline __m256 unpack(void *arr0, void *arr1, void *arr2, void *arr3) {
-            float *to_load0 = (float *)arr0;
-            float *to_load1 = (float *)arr1;
-            float *to_load2 = (float *)arr2;
-            float *to_load3 = (float *)arr3;
-            return _mm256_setr_ps(to_load0[0], to_load0[1], to_load1[0], to_load1[1], to_load2[0], to_load2[1], to_load3[0], to_load3[1]);
+        static force_inline __m256 unpack(float *arr0, float *arr1, float *arr2, float *arr3) {
+            return _mm256_setr_ps(arr0[0], arr0[1], arr1[0], arr1[1], arr2[0], arr2[1], arr3[0], arr3[1]);
         }
-        static force_inline __m256 unpack(void *arr0, void *arr1, void *arr2, void *arr3, void *arr4, void *arr5, void *arr6, void *arr7) {
-            float *to_load0 = (float *)arr0;
-            float *to_load1 = (float *)arr1;
-            float *to_load2 = (float *)arr2;
-            float *to_load3 = (float *)arr3;
-            float *to_load4 = (float *)arr4;
-            float *to_load5 = (float *)arr5;
-            float *to_load6 = (float *)arr6;
-            float *to_load7 = (float *)arr7;
-            return _mm256_setr_ps(to_load0[0], to_load1[0], to_load2[0], to_load3[0], to_load4[0], to_load5[0], to_load6[0], to_load7[0]);
+        static force_inline __m256 unpack(float *arr0, float *arr1, float *arr2, float *arr3, float *arr4, float *arr5, float *arr6, float *arr7) {
+            return _mm256_setr_ps(arr0[0], arr1[0], arr2[0], arr3[0], arr4[0], arr5[0], arr6[0], arr7[0]);
         }
 
-        static force_inline void pack( __m256 src, void *arr) {
-            float *to_store = (float *)arr;
-            _mm256_storeu_ps(to_store, src);
+        static force_inline void pack( __m256 src, float *arr) {
+            _mm256_storeu_ps(arr, src);
         }        
-        static force_inline void pack( __m256 src, void *arr0, void *arr1) {
-            float *to_store0 = (float *)arr0;
-            float *to_store1 = (float *)arr1;
+        static force_inline void pack( __m256 src, float *arr0, float *arr1) {
             float* result = (float*)&src;
-            to_store0[0] = result[0]; to_store0[1] = result[1]; to_store0[2] = result[2]; to_store0[3] = result[3];
-            to_store1[0] = result[4]; to_store1[1] = result[5]; to_store1[2] = result[6]; to_store1[3] = result[7];
+            arr0[0] = result[0]; arr0[1] = result[1]; arr0[2] = result[2]; arr0[3] = result[3];
+            arr1[0] = result[4]; arr1[1] = result[5]; arr1[2] = result[6]; arr1[3] = result[7];
         }        
-        static force_inline void pack( __m256 src, void *arr0, void *arr1, void *arr2, void *arr3) {
-            float *to_store0 = (float *)arr0;
-            float *to_store1 = (float *)arr1;
-            float *to_store2 = (float *)arr2;
-            float *to_store3 = (float *)arr3;
+        static force_inline void pack( __m256 src, float *arr0, float *arr1, float *arr2, float *arr3) {
             float* result = (float*)&src;
-            to_store0[0] = result[0]; to_store0[1] = result[1];
-            to_store1[0] = result[2]; to_store1[1] = result[3];
-            to_store2[0] = result[4]; to_store2[1] = result[5];
-            to_store3[0] = result[6]; to_store3[1] = result[7];
+            arr0[0] = result[0]; arr0[1] = result[1];
+            arr1[0] = result[2]; arr1[1] = result[3];
+            arr2[0] = result[4]; arr2[1] = result[5];
+            arr3[0] = result[6]; arr3[1] = result[7];
         }        
-        static force_inline void pack( __m256 src, void *arr0, void *arr1, void *arr2, void *arr3, void *arr4, void *arr5, void *arr6, void *arr7) {
-            float *to_store0 = (float *)arr0;
-            float *to_store1 = (float *)arr1;
-            float *to_store2 = (float *)arr2;
-            float *to_store3 = (float *)arr3;
-            float *to_store4 = (float *)arr4;
-            float *to_store5 = (float *)arr5;
-            float *to_store6 = (float *)arr6;
-            float *to_store7 = (float *)arr7;
+        static force_inline void pack( __m256 src, float *arr0, float *arr1, float *arr2, float *arr3, float *arr4, float *arr5, float *arr6, float *arr7) {
             float* result = (float*)&src;
-            to_store0[0] = result[0];
-            to_store1[0] = result[1];
-            to_store2[0] = result[2];
-            to_store3[0] = result[3];
-            to_store4[0] = result[4];
-            to_store5[0] = result[5];
-            to_store6[0] = result[6];
-            to_store7[0] = result[7];
+            arr0[0] = result[0];
+            arr1[0] = result[1];
+            arr2[0] = result[2];
+            arr3[0] = result[3];
+            arr4[0] = result[4];
+            arr5[0] = result[5];
+            arr6[0] = result[6];
+            arr7[0] = result[7];
         }        
     };
 
     template <>
     struct Ops<std::complex<float>> {
-        static force_inline __m256 unpack(void *arr) {
-            return Ops<float>::unpack(arr);
+        static force_inline __m256 unpack(std::complex<float> *arr) {
+            return Ops<float>::unpack((float*)arr);
         }
-        static force_inline __m256 unpack(void *arr0, void *arr1) {
-            return Ops<float>::unpack(arr0, arr1);
+        static force_inline __m256 unpack(std::complex<float> *arr0, std::complex<float> *arr1) {
+            return Ops<float>::unpack((float*)arr0, (float*)arr1);
         }
-        static force_inline __m256 unpack(void *arr0, void *arr1, void *arr2, void *arr3) {
-            return Ops<float>::unpack(arr0, arr1, arr2, arr3);
-        }
-        static force_inline __m256 unpack(void *arr0, void *arr1, void *arr2, void *arr3, void *arr4, void *arr5, void *arr6, void *arr7) {
-            return Ops<float>::unpack(arr0, arr1, arr2, arr3, arr4, arr5, arr6, arr7);
+        static force_inline __m256 unpack(std::complex<float> *arr0, std::complex<float> *arr1, std::complex<float> *arr2, std::complex<float> *arr3) {
+            return Ops<float>::unpack((float*)arr0, (float*)arr1, (float*)arr2, (float*)arr3);
         }
 
-        static force_inline void pack( __m256 src, void *arr) {
-            Ops<float>::pack(src, arr);
+        static force_inline void pack( __m256 src, std::complex<float> *arr) {
+            Ops<float>::pack(src, (float*)arr);
         }        
-        static force_inline void pack( __m256 src, void *arr0, void *arr1) {
-            Ops<float>::pack(src, arr0, arr1);
+        static force_inline void pack( __m256 src, std::complex<float> *arr0, std::complex<float> *arr1) {
+            Ops<float>::pack(src, (float*)arr0, (float*)arr1);
         }        
-        static force_inline void pack( __m256 src, void *arr0, void *arr1, void *arr2, void *arr3) {
-            Ops<float>::pack(src, arr0, arr1, arr2, arr3);
-        }        
-        static force_inline void pack( __m256 src, void *arr0, void *arr1, void *arr2, void *arr3, void *arr4, void *arr5, void *arr6, void *arr7) {
-            Ops<float>::pack(src, arr0, arr1, arr2, arr3, arr4, arr5, arr6, arr7);
+        static force_inline void pack( __m256 src, std::complex<float> *arr0, std::complex<float> *arr1, std::complex<float> *arr2, std::complex<float> *arr3) {
+            Ops<float>::pack(src, (float*)arr0, (float*)arr1, (float*)arr2, (float*)arr3);
         }        
     };
     

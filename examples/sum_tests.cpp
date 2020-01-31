@@ -23,9 +23,11 @@ typedef KernelParameters<std::size_t, 1, 2, 4, 8> chunk_numbers;
 typedef Kernels<sum_simple::chunk_sum, sum_unroll::chunk_sum, sum_man::chunk_sum> sum_kernels;
 typedef Combinations<sum_kernels, chunk_sizes, chunk_numbers> tuples;
                 
-static float init() {return (float)(std::rand()) / RAND_MAX;}
+// static std::complex<double> init() {return {(double)(std::rand()) / RAND_MAX, (float)(std::rand()) / RAND_MAX};}
+// typedef array_sum::test_function<std::complex<double>, init> tf;
+static double init() {return (double)(std::rand()) / RAND_MAX;}
+typedef array_sum::test_function<double, init> tf;
 
-typedef array_sum::test_function<float, init> tf;
 typedef TestHarness<tf::core, tf::input_data, tuples::val> array_sum_harness;
 typedef tf::input_data array_sum_input;
 
