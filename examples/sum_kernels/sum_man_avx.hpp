@@ -62,7 +62,7 @@ namespace avx {
         static force_inline void pack( __m256d src, void *arr0, void *arr1) {
             double *to_store0 = (double *)arr0;
             double *to_store1 = (double *)arr1;
-            double* result = (double*)&src;
+            double* result = (double *)&src;
             to_store0[0] = result[0];
             to_store0[1] = result[1];
             to_store1[0] = result[2];
@@ -73,11 +73,11 @@ namespace avx {
             double *to_store1 = (double *)arr1;
             double *to_store2 = (double *)arr2;
             double *to_store3 = (double *)arr3;
-            double* result = (double*)&src;
+            double* result = (double *)&src;
             to_store0[0] = result[0];
-            to_store1[1] = result[1];
-            to_store2[2] = result[2];
-            to_store3[3] = result[3];
+            to_store1[0] = result[1];
+            to_store2[0] = result[2];
+            to_store3[0] = result[3];
         }        
     };
 
